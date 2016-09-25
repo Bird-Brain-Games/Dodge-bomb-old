@@ -11,10 +11,14 @@ public:
 	Loader(int);
 	std::vector<int>& getOrder();
 	std::vector<float>& getVertex();
-	//std::vector<float>& testing();
+	void order();
+	std::vector<float>& getVertexOrder();
+	std::vector<float>& getColorOrder();
 private:
 	std::vector<float> vertexs;
 	std::vector<int> testing;
+	std::vector<float> vertexOrder;
+	std::vector<float> colorOrder;
 	int data;
 
 	UINT uiVBO;
