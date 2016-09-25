@@ -8,9 +8,13 @@
 #include "gl\glew.h"
 #include "gl\freeglut.h"
 #include "glm\glm.hpp"
+#include "glm\gtc\matrix_transform.hpp"
+#include "glm\gtc\type_ptr.hpp"
+
 //Project files
 #include "objLoader.h"
 #include "shaderLoader.h"
+#include "shaders.h"
 
 // Defines and Core variables
 #define FRAMES_PER_SECOND 60
@@ -24,7 +28,8 @@ int mousepositionY;
 
 
 // A few conversions to know
-
+float degToRad = 3.14159f / 180.0f;
+float radToDeg = 180.0f / 3.14159f;
 
 
 /* function DisplayCallbackFunction(void)
@@ -41,133 +46,136 @@ float b = 0.2;
 UINT uiVBO[2]; // One VBO for vertices positions, one for colors
 UINT uiVAO[1]; // One VAO for pyramid
 
+float rotation = 0;
+UINT testing;
+
+ShaderLoader vertShader;
+ShaderLoader fragShader;
+Loader object(3);
+
+CShader shVertex, shFragment;
+CShaderProgram spMain;
+
+
+float fPyramid[36]; // Pyramid data - 4 triangles of 3 vertices of 3 floats
+float fPyramidColor[36]; // Same for color
+
+void initScene()
+{
+	object.load("pyramid");
+
+	glGenVertexArrays(1, uiVAO);
+	glGenBuffers(2, uiVBO);
+	glBindVertexArray(uiVAO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, object.getVertexOrder().size() * sizeof(float), object.getVertexOrder().data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, object.getColorOrder().size() * sizeof(float), object.getColorOrder().data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+
+	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
+	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
+
+	spMain.createProgram();
+	spMain.addShaderToProgram(&shVertex);
+	spMain.addShaderToProgram(&shFragment);
+
+	spMain.linkProgram();
+	spMain.useProgram();
+
+
+	//vertShader.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
+	//fragShader.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
+
+
+	//testing = glCreateProgram();
+
+	//glAttachShader(testing, vertShader.getID());
+	//glAttachShader(testing, fragShader.getID());
+
+	//glLinkProgram(testing);
+
+	//GLint isLinked = 0;
+	//glLinkProgram(testing);
+	//glGetProgramiv(testing, GL_LINK_STATUS, (int *)&isLinked);
+	//glUseProgram(testing);
+
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glEnable(GL_DEPTH_TEST);
+	glClearDepth(1.0);
+}
+
+float tx = 0.0f;
+float ty = 0.0f;
+float tz = 0.0f;
+
+float rx = 0.0f;
+float ry = 0.0f;
+float rz = 0.0f;
+
+float sx = 1.0f;
+float sy = 1.0f;
+float sz = 1.0f;
+int keydown[256];
+
 void DisplayCallbackFunction(void)
 {
-
-	/* clear the screen */
-	glViewport(0, 0, windowWidth, windowHeight);
-
-
-	Loader asdfa(3);
-	asdfa.load("spongebob_bind");
-	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	rotation += 1;
+	
+	/* clear the screen */
 
-	//std::vector<float> vertexs;
-	//std::vector<float> colours;
-	//for (int count = 0; count <= asdfa.getOrder().size() - 1; count += 3)
-	//{
-	//	switch ((count / 3) % 3)
-	//	{
-	//	case 0:
-	//		colours.push_back(0.5f);
-	//		colours.push_back(0.0f);
-	//		colours.push_back(0.0f);
-	//		break;
-	//	case 1:
-	//		colours.push_back(0.0f);
-	//		colours.push_back(0.5f);
-	//		colours.push_back(0.0f);
-	//		break;
-	//	case 2:
-	//		colours.push_back(0.0f);
-	//		colours.push_back(0.0f);
-	//		colours.push_back(0.5f);
-	//		break;
-	//	}
-	//	int temp = ((asdfa.getOrder().at(count) - 1) * 3);
-	//	vertexs.push_back(asdfa.getVertex().at(temp));
-	//	vertexs.push_back(asdfa.getVertex().at(temp + 1));
-	//	vertexs.push_back(asdfa.getVertex().at(temp + 2));
-	//}
-
-	//	glGenVertexArrays(1, uiVAO);
-	//glGenBuffers(2, uiVBO);
-
-	//// Setup whole pyramid
-	//glBindVertexArray(uiVAO[0]);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	//glBufferData(GL_ARRAY_BUFFER, 36*sizeof(float), fPyramid, GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	//glBufferData(GL_ARRAY_BUFFER, 36*sizeof(float), fPyramidColor, GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBegin(GL_TRIANGLES);
-
-	for (int count = 0; count <= asdfa.getOrder().size() - 1; count += 3)
-	{
-		switch ((count / 3) % 3)
-		{
-		case 0:
-			glColor3f(0.5f, 0.0f, 0.0f);
-			break;
-		case 1:
-			glColor3f(0.0f, 0.5f, 0.0f);
-			break;
-		case 2:
-			glColor3f(0.0f, 0.0f, 0.5f);
-			break;
-		}
-		int temp = ((asdfa.getOrder().at(count) - 1) * 3);
-		glVertex3f(asdfa.getVertex().at(temp), asdfa.getVertex().at(temp + 1), asdfa.getVertex().at(temp + 2));
-	}
-	glEnd();
+//	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindVertexArray(uiVAO[0]);
 
 
-	/* This is where we draw things */
+	int iModelViewLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewMatrix");
+	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
+	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
+	// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
+	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
+	// Render rotating pyramid in the middle
+	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
+	//mCurrent = glm::translate(mModelView, test);
+	//glm::mat4x4 mCurrent = { 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
+	//glm::mat4x4 rotationX = { sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
+	//glm::mat4x4 rotationY;
+	//glm::mat4x4 rotationZ;
 
-
-	//glColor3f(0.5f, 0.2f, 0.1f);
-	//glBegin(GL_TRIANGLE_FAN);
-
-	//glVertex3f(-0.25f, -0.25f, 0.0f);//-- bottom left
-	//glVertex3f(0.25f, -0.25f, 0.0f);//+- bottom right
-	//glVertex3f(0.0f, 0.0f, -0.25f);//++ top right
-
-	//glEnd();
-	//glColor3f(0.5f, 0.2f, 0.1f);
-	//glBegin(GL_TRIANGLES);
-
-	//for (float count = 0; count <= 2; count++)
-	//{
-
-	//	glVertex3f(count, 0.0f, 0.0f);//-- bottom left
-	//}
-	//glVertex3f(0.5f, 1.0f, 0.0f);//-- bottom left
-	//glEnd();
+	glm::mat4x4 mCurrent = { sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };
+	glm::mat4x4 mCurrent2 = { sx, 0.0, 0.0, tx, 0.0, sy, 0.0, ty, 0.0, 0.0, sz, tz, 0.0, 0.0, 0.0, 1.0 };
+	glUniformMatrix4fv(iModelViewLoc, 1, GL_FALSE, glm::value_ptr(mCurrent));
+	glDrawArrays(GL_TRIANGLES, 0, object.getVertexOrder().size());
 
 
 
-
-
-
-	//fPyramid[0] = 0.0f; fPyramid[1] = 5.0f; fPyramid[2] = 0.0f;
-	//fPyramid[3] = -3.0f; fPyramid[4] = 0.0f; fPyramid[5] = 3.0f;
-	//fPyramid[6] = 3.0f; fPyramid[7] = 0.0f; fPyramid[8] = 3.0f;
-	//// Back face
-	//fPyramid[9] = 0.0f; fPyramid[10] = 5.0f; fPyramid[11] = 0.0f;
-	//fPyramid[12] = 3.0f; fPyramid[13] = 0.0f; fPyramid[14] = -3.0f;
-	//fPyramid[15] = -3.0f; fPyramid[16] = 0.0f; fPyramid[17] = -3.0f;
-	// Left face
-	//fPyramid[18] = 0.0f; fPyramid[19] = 5.0f; fPyramid[20] = 0.0f;
-	//fPyramid[21] = -3.0f; fPyramid[22] = 0.0f; fPyramid[23] = -3.0f;
-	//fPyramid[24] = -3.0f; fPyramid[25] = 0.0f; fPyramid[26] = 3.0f;
-
-	//// Right face
-	//fPyramid[27] = 0.0f; fPyramid[28] = 5.0f; fPyramid[29] = 0.0f;
-	//fPyramid[30] = 3.0f; fPyramid[31] = 0.0f; fPyramid[32] = 3.0f;
-	//fPyramid[33] = 3.0f; fPyramid[34] = 0.0f; fPyramid[35] = -3.0f;
-
+	//int iModelViewLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewMatrix");
+	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
+	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
+	//// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
+	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
+	//// Render rotating pyramid in the middle
+	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
+	//mCurrent = glm::translate(mModelView, test);
+	//glUniformMatrix4fv(iModelViewLoc, 1, GL_FALSE, glm::value_ptr(mCurrent));
+	//glDrawArrays(GL_TRIANGLES, 0, object.getVertexOrder().size());
 
 
 	/* Swap Buffers to Make it show up on screen */
 	glutSwapBuffers();
+
+	//glDetachShader(testing, vertShader.getID());
+	//glDetachShader(testing, fragShader.getID());
 
 }
 
@@ -179,15 +187,8 @@ void KeyboardCallbackFunction(unsigned char key, int x, int y)
 {
 	std::cout << "Key Down:" << (int)key << std::endl;
 
-	switch (key)
-	{
-	case 32: // the space bar
-		break;
-	case 27: // the escape key
-	case 'q': // the 'q' key
-		exit(0);
-		break;
-	}
+	keydown[key] = true;
+
 }
 
 /* function void KeyboardUpCallbackFunction(unsigned char, int,int)
@@ -196,20 +197,7 @@ void KeyboardCallbackFunction(unsigned char key, int x, int y)
 */
 void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 {
-	glViewport(0, 0, windowWidth, windowHeight);
-
-
-
-	glClearColor(0.0, 0.0, 0.0, 0.8f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-
-
-
-
-
-	glutSwapBuffers();
+	keydown[key] = false;
 }
 
 /* function TimerCallbackFunction(int value)
@@ -225,6 +213,56 @@ void TimerCallbackFunction(int value)
 	/* this call makes it actually show up on screen */
 	glutPostRedisplay();
 	/* this call gives it a proper frame delay to hit our target FPS */
+	if (keydown['d'])
+	{
+		tx += 0.05;
+	}
+	if (keydown['a'])
+	{
+		tx -= 0.05;
+	}
+	if (keydown['q'])
+	{
+		tz += 0.05;
+	}
+	if (keydown['e'])
+	{
+		tz -= 0.05;
+	}
+	if (keydown['w'])
+	{
+		ty += 0.05;
+	}
+	if (keydown['s'])
+	{
+		ty -= 0.05;
+	}
+
+
+	if (keydown['r'])
+	{
+		sx += 0.05;
+	}
+	if (keydown['y'])
+	{
+		sx -= 0.05;
+	}
+	if (keydown['f'])
+	{
+		sy += 0.05;
+	}
+	if (keydown['h'])
+	{
+		sy -= 0.05;
+	}
+	if (keydown['v'])
+	{
+		sz += 0.05;
+	}
+	if (keydown['n'])
+	{
+		sz -= 0.05;
+	}
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }
 
@@ -237,15 +275,12 @@ void TimerCallbackFunction(int value)
 void WindowReshapeCallbackFunction(int w, int h)
 {
 	// switch to projection because we're changing projection
-	float asp = (float)w / (float)h;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, w, 0, h);
-	windowHeight = h;
+	gluPerspective(90.0f, (float)w / h, 0.1f, 10000.0f);
 	windowWidth = w;
-
-
-	//switch back to modelview
+	windowHeight = h;
+	glViewport(0, 0, windowWidth, windowHeight);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -296,7 +331,6 @@ void MousePassiveMotionCallbackFunction(int x, int y)
 *  - this is the main function
 *  - does initialization and then calls glutMainLoop() to start the event handler
 */
-GLuint testing;
 
 int main(int argc, char **argv)
 {
@@ -319,9 +353,10 @@ int main(int argc, char **argv)
 
 
 
-
+	initScene();
 	/* set up our function callbacks */
 	//alternative names
+
 	glutDisplayFunc(DisplayCallbackFunction);//draw()
 	glutKeyboardFunc(KeyboardCallbackFunction);//KeyDown()
 	glutKeyboardUpFunc(KeyboardUpCallbackFunction);//KeyUp()
@@ -331,32 +366,11 @@ int main(int argc, char **argv)
 	glutPassiveMotionFunc(MousePassiveMotionCallbackFunction);//mouseMovedPassive() just mouse movement
 	glutTimerFunc(1, TimerCallbackFunction, 0);//Timmer/clockTick function
 
-	ShaderLoader vertShader;
-	ShaderLoader fragShader;
 
-
-	vertShader.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
-	fragShader.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
-
-	GLuint glCreateProgram​();
-
-	testing = glCreateProgram();
-
-	glAttachShader(testing, vertShader.getID());
-	glAttachShader(testing, fragShader.getID());
-
-	glLinkProgram(testing);
-
-	GLint isLinked = 0;
-	glGetProgramiv(testing, GL_LINK_STATUS, (int *)&isLinked);
-
-	glUseProgram(testing);
 
 	/* start the event handler */
 	glutMainLoop();
 	return 0;
 
-	glDetachShader(testing, vertShader.getID());
-	glDetachShader(testing, fragShader.getID());
 
 }
