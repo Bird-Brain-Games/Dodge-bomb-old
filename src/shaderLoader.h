@@ -10,7 +10,7 @@ class ShaderLoader
 public:
 	ShaderLoader();
 	bool loadShader(std::string fileName, int shaderType);
-	UINT getID();
+	UINT getShaderID();
 private:
 	UINT shaderID;// Shader ID
 	int sType; // what type of shader that the program will load
