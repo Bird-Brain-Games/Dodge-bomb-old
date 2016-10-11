@@ -6,7 +6,7 @@ ShaderLoader::ShaderLoader()
 	loaded = false;
 }
 
-UINT ShaderLoader::getID()
+UINT ShaderLoader::getShaderID()
 {
 	return shaderID;
 }
@@ -18,13 +18,11 @@ bool ShaderLoader::loadShader(std::string name, int shaderType)
 	std::vector<std::string> lines;
 	while (std::getline(file, temp))
 	{
-		if (temp.empty() == 0)
-			if (temp.at(0) != '#')
-				lines.push_back(temp);
+		lines.push_back(temp);
 	}
 	file.close();
 	const char** size = new const char*[(int)lines.size()];
-	for (int count = 0; count <= lines.size() - 1; count++)
+	for (int count = 0; count < (int)lines.size(); count++)
 	{
 		size[count] = lines[count].c_str();
 	}
@@ -34,6 +32,13 @@ bool ShaderLoader::loadShader(std::string name, int shaderType)
 	delete[] size;
 
 	shaderID = shaderType;
+	loaded = true;
+
+	int iCompilationStatus;
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &iCompilationStatus);
+
+	if (iCompilationStatus == GL_FALSE)return false;
+	sType = shaderType;
 	loaded = true;
 
 	return true;

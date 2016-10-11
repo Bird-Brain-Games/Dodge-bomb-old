@@ -53,9 +53,9 @@ float radToDeg = 180.0f / 3.14159f;
 *  - this draws the sprites appropriately
 */
 
-float tx = 2.0f;
-float ty = 3.0f;
-float tz = 4.0f;
+float tx = 0.0f;
+float ty = 0.0f;
+float tz = 0.0f;
 
 float rx = 0.0f;
 float ry = 0.0f;
@@ -79,10 +79,10 @@ UINT uiVAO[2]; // One VAO for pyramid
 float rotation = 0;
 UINT testing;
 
-ShaderLoader vertShader;
-ShaderLoader fragShader;
-Loader object(3);
-Loader object2(3);
+CShader vertShader;
+CShader fragShader;
+Loader object;
+Loader object2;
 
 CShader shVertex, shFragment;
 CShaderProgram spMain;
@@ -147,33 +147,34 @@ void makeMatricies()
 
 void initScene()
 {
-	object.load("thor");
+	object.load("robot_at_rest.obj");
 
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, object.getVertexOrder().size() * sizeof(float), object.getVertexOrder().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object.getVertex().size() * sizeof(float), object.getVertex().data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, object.getColorOrder().size() * sizeof(float), object.getColorOrder().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	object2.load("spongebob_bind");
-
-
-	glBindVertexArray(uiVAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, object2.getVertexOrder().size() * sizeof(float), object2.getVertexOrder().data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, object2.getColorOrder().size() * sizeof(float), object2.getColorOrder().data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//object2.load("thor.obj");
+	//
+	//
+	//glBindVertexArray(uiVAO[1]);
+	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+	//glBufferData(GL_ARRAY_BUFFER, object2.getVertex().size() * sizeof(float), object2.getVertex().data(), GL_STATIC_DRAW);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
+	//glBufferData(GL_ARRAY_BUFFER, object2.getColor().size() * sizeof(float), object2.getColor().data(), GL_STATIC_DRAW);
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
@@ -229,7 +230,7 @@ void DisplayCallbackFunction(void)
 	glm::mat4 ProjectionMatrix = getProjectionMatrix();
 	glm::mat4 ViewMatrix = getViewMatrix();
 	glm::mat4 ModelMatrix = glm::mat4(1.0);
-	ModelMatrix *= glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
+	//ModelMatrix *= glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 
@@ -255,12 +256,12 @@ void DisplayCallbackFunction(void)
 
 	
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object.getVertexOrder().size());
+	glDrawArrays(GL_TRIANGLES, 0, object.getVertex().size());
 
-	glBindVertexArray(uiVAO[1]);
-	glm::mat4 identity(1.0);
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object2.getVertexOrder().size());
+	//glBindVertexArray(uiVAO[1]);
+	//glm::mat4 identity = glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };
+	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	//glDrawArrays(GL_TRIANGLES, 0, object2.getVertex().size());
 
 	//int iModelViewLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewMatrix");
 	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
@@ -333,13 +334,24 @@ void TimerCallbackFunction(int value)
 	{
 		ty -= 0.05;
 	}
+	if (keydown['u'])
+	{
+		tz += 0.05;
+	}
+	if (keydown['o'])
+	{
+		tz -= 0.05;
+	}
 
 
-	if (keydown['l'])
+	if (keydown['z'])
 	{
 		lock = !lock;
 	}
-
+	if (keydown['q'])
+	{
+		glutLeaveMainLoop();
+	}
 	if (lock == true)
 	{
 		glutWarpPointer(windowWidth / 2, windowHeight / 2);
