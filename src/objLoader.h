@@ -17,15 +17,15 @@ class Loader
 public:
 	bool load(std::string);
 	std::vector<glm::vec3>& getVertex();
-	std::vector<uv>& getUV();
+	std::vector<glm::vec2>& getUV();
 	std::vector<glm::vec3>& getNormal();
-	std::vector<glm::vec3>& getColor();
+	std::vector<float>& getColor();
 private:
 	std::vector<glm::vec3> out_vertices;
-	std::vector<uv> out_uvs;
+	std::vector<glm::vec2> out_uvs;
 	std::vector<glm::vec3> out_normals;
-	std::vector<glm::vec3> color;
-
+	std::vector<float> color;
+	std::vector<BYTE> data;
 	UINT uiVBO;
 	UINT uiVAO;
 	UINT uiBuffer;

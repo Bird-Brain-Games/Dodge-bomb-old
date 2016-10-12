@@ -15,6 +15,7 @@
 #include "objLoader.h"
 #include "shaderLoader.h"
 #include "shaders.h"
+#include "lerp.h"
 
 // Defines and Core variables
 #define FRAMES_PER_SECOND 60
@@ -46,6 +47,7 @@ float mouseSpeed = 0.005f;
 float degToRad = 3.14159f / 180.0f;
 float radToDeg = 180.0f / 3.14159f;
 
+bool lerpStage = true;
 
 /* function DisplayCallbackFunction(void)
 * Description:
@@ -71,21 +73,24 @@ float r = 0.2;
 float b = 0.2;
 
 bool lock = true; //locks the mouse to the center of the screen;
-float time;
 float lastTime;
 UINT uiVBO[4]; // One VBO for vertices positions, one for colors
 UINT uiVAO[2]; // One VAO for pyramid
 
 float rotation = 0;
+float dt;
 UINT testing;
 
 CShader vertShader;
 CShader fragShader;
 Loader object;
 Loader object2;
+Loader object3;
 
 CShader shVertex, shFragment;
 CShaderProgram spMain;
+
+float time = 0.0f;
 
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
@@ -113,7 +118,7 @@ void makeMatricies()
 	);
 	glm::vec3 up = glm::cross(right, direction);
 
-	if (keydown['w']) 
+	if (keydown['w'])
 	{
 		position += direction *  speed;
 	}
@@ -132,9 +137,9 @@ void makeMatricies()
 	{
 		position -= right *  speed;
 	}
-	
 
-						   // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+
+	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(initialFoV, (float)windowWidth / windowHeight, 0.1f, 100.0f);
 	// Camera matrix
 	ViewMatrix = glm::lookAt(
@@ -144,24 +149,33 @@ void makeMatricies()
 	);
 
 }
-
+void* ptr;
 void initScene()
 {
-	object.load("robot_at_rest.obj");
-
+	object.load("sphere.obj");
+	object2.load("sphere.obj");
+	object3.load("big_sphere.obj");
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, object.getVertex().size() * sizeof(float), object.getVertex().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+//	ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	
+	// Make sure to tell OpenGL we're done with the pointer
+	//glUnmapBuffer(GL_ARRAY_BUFFER);
 
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	
 
 	//object2.load("thor.obj");
 	//
@@ -212,6 +226,28 @@ void initScene()
 
 void DisplayCallbackFunction(void)
 {
+	if (time > 1)
+	{
+		time = 0;
+		lerpStage = !lerpStage;
+	}
+	time += dt;
+	//std::cout << time << std::endl;
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
+	for (int count = 0; count < object.getVertex().size(); count++)
+	{
+		if (lerpStage == true)
+			object.getVertex()[count] = lerp<glm::vec3>(object2.getVertex()[count], object3.getVertex()[count], time);
+		else
+			object.getVertex()[count] = lerp<glm::vec3>(object3.getVertex()[count], object2.getVertex()[count], time);
+	}
+	glBufferSubData(GL_ARRAY_BUFFER, 0, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data());
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//memcpy(ptr, object.getVertex().data(), sizeof(object.getVertex().data()));
+
+
+	std::cout << object.getVertex()[0].x << std::endl;
+	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
 	glLoadIdentity();
 	rotation += 1;
 
@@ -254,7 +290,7 @@ void DisplayCallbackFunction(void)
 	//glm::mat4x4 rotationY;
 	//glm::mat4x4 rotationZ;
 
-	
+
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object.getVertex().size());
 
@@ -357,7 +393,12 @@ void TimerCallbackFunction(int value)
 		glutWarpPointer(windowWidth / 2, windowHeight / 2);
 	}
 
-	time = glutGet(GLUT_ELAPSED_TIME);
+	static int elapsedTimeAtLastTick = 0;
+	int totalElapsedTime = glutGet(GLUT_ELAPSED_TIME);
+
+	dt = totalElapsedTime - elapsedTimeAtLastTick;
+	dt /= 1000.0f;
+	elapsedTimeAtLastTick = totalElapsedTime;
 
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }
