@@ -19,7 +19,7 @@ bool Loader::load(std::string fileName)
 
 	std::vector<unsigned int> vertexIndecies, uvIndecies, normalindiecies;
 	std::vector<glm::vec3>	temporary_vertices;
-	std::vector<uv>	temporary_uvs;
+	std::vector<glm::vec2>	temporary_uvs;
 	std::vector<glm::vec3>	temporary_normals;
 	while (1)
 	{
@@ -33,8 +33,8 @@ bool Loader::load(std::string fileName)
 
 		if (strcmp(line, "vt") == 0)
 		{
-			uv textureCoord;
-			fscanf(file, "%f %f\n", &textureCoord.u, &textureCoord.v);
+			glm::vec2 textureCoord;
+			fscanf(file, "%f %f\n", &textureCoord.x, &textureCoord.y);
 			temporary_uvs.push_back(textureCoord);
 		}
 		else if (strcmp(line, "vn") == 0)
@@ -51,7 +51,7 @@ bool Loader::load(std::string fileName)
 
 		}
 		else if (strcmp(line, "f") == 0)
-		{	
+		{
 			std::cout << strcmp(line, "f") << std::endl;
 			unsigned int vertexIndex[3], UVindex[3], normalIndex[3];
 
@@ -59,10 +59,12 @@ bool Loader::load(std::string fileName)
 				&vertexIndex[0], &UVindex[0], &normalIndex[0],
 				&vertexIndex[1], &UVindex[1], &normalIndex[1],
 				&vertexIndex[2], &UVindex[2], &normalIndex[2]);
-
 			vertexIndecies.push_back(vertexIndex[0]);
 			vertexIndecies.push_back(vertexIndex[1]);
 			vertexIndecies.push_back(vertexIndex[2]);
+
+			//vboModelData.addData(&vVertices[iVertIndex - 1], sizeof(glm::vec3));
+			//data.insert(data.end(), (BYTE*)ptrData, (BYTE*)ptrData + uiDataSize);
 
 			uvIndecies.push_back(UVindex[0]);
 			uvIndecies.push_back(UVindex[1]);
@@ -71,6 +73,13 @@ bool Loader::load(std::string fileName)
 			normalindiecies.push_back(normalIndex[0]);
 			normalindiecies.push_back(normalIndex[1]);
 			normalindiecies.push_back(normalIndex[2]);
+
+			//for (int count = 0; count < 3; count++)
+			//{
+			//data.insert(data.end(), (BYTE*)&temporary_vertices[vertexIndex[count] - 1], sizeof(glm::vec3) + (BYTE*)&temporary_vertices[vertexIndex[count] - 1]);
+			//data.insert(data.end(), (BYTE*)&temporary_uvs[UVindex[count] - 1], sizeof(glm::vec2) + (BYTE*)&temporary_vertices[UVindex[count] - 1]);
+			//data.insert(data.end(), (BYTE*)&temporary_normals[normalIndex[count] - 1], sizeof(glm::vec3) + (BYTE*)&temporary_vertices[normalIndex[count] - 1]);
+			//}
 		}
 
 	}
@@ -78,29 +87,36 @@ bool Loader::load(std::string fileName)
 	for (unsigned int i = 0; i < vertexIndecies.size(); i++)
 	{
 		unsigned int vertexIndex = vertexIndecies[i];
+		
 		glm::vec3 vertex = temporary_vertices[vertexIndex - 1];
 		out_vertices.push_back(vertex);
 		switch (i % 3)
 		{
 		case 0:
-			color.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+			color.push_back(1.0f);
+			color.push_back(0.0f);
+			color.push_back(0.0f);
 			break;
 		case 1:
-			color.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+			color.push_back(0.0f);
+			color.push_back(1.0f);
+			color.push_back(0.0f);
 			break;
 		case 2:
-			color.push_back(glm::vec3(1.0f, 0.0f, 1.0f));
+			color.push_back(0.0f);
+			color.push_back(0.0f);
+			color.push_back(1.0f);
 			break;
 		}
 	}
-
+	
 	for (unsigned int i = 0; i < uvIndecies.size(); i++)
 	{
 		unsigned int uvIndex = uvIndecies[i];
-		uv uvs = temporary_uvs[uvIndex - 1];
+		glm::vec2 uvs = temporary_uvs[uvIndex - 1];
 		out_uvs.push_back(uvs);
 	}
-
+	
 	for (unsigned int i = 0; i < normalindiecies.size(); i++)
 	{
 		unsigned int normalIndex = normalindiecies[i];
@@ -112,6 +128,6 @@ bool Loader::load(std::string fileName)
 }
 
 std::vector<glm::vec3>& Loader::getVertex() { return out_vertices; }
-std::vector<uv>& Loader::getUV() { return out_uvs; }
+std::vector<glm::vec2>& Loader::getUV() { return out_uvs; }
 std::vector<glm::vec3>& Loader::getNormal() { return out_normals; }
-std::vector<glm::vec3>& Loader::getColor() { return color; }
+std::vector<float>& Loader::getColor() { return color; }
