@@ -175,7 +175,6 @@ void initScene()
 		// Make sure to tell OpenGL we're done with the pointer
 		//glUnmapBuffer(GL_ARRAY_BUFFER);
 
-
 		//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
 		//glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
 		//glEnableVertexAttribArray(1);

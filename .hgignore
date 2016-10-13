@@ -6,3 +6,10 @@ syntax: glob
 *.pdb
 *.ilk
 *Debug
+*.suo
+*.sdf
+*.tlog
+*.idb
+*.log
+*/debug
+*/release
