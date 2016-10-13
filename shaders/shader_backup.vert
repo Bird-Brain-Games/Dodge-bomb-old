@@ -2,14 +2,13 @@
 
 uniform mat4 modelViewProjectionMatrix;
 
-
 layout (location = 0) in vec3 inPosition;
-layout (location = 1) in vec2 inCoord;
+layout (location = 1) in vec3 inColor;
 
-out vec2 texCoord;
+smooth out vec3 theColor;
 
 void main()
 {
 	gl_Position = modelViewProjectionMatrix*vec4(inPosition, 1.0);
-	texCoord = inCoord;
+	theColor = inColor;
 }

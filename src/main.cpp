@@ -11,6 +11,8 @@
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtc\type_ptr.hpp"
 
+
+#include "IL\ilut.h"
 //Project files
 #include "objLoader.h"
 #include "shaderLoader.h"
@@ -39,7 +41,7 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 0.3f; // 3 units / second
+float speed = 0.3f; // 1 units / second
 float mouseSpeed = 0.005f;
 
 
@@ -48,6 +50,7 @@ float degToRad = 3.14159f / 180.0f;
 float radToDeg = 180.0f / 3.14159f;
 
 bool lerpStage = true;
+
 
 /* function DisplayCallbackFunction(void)
 * Description:
@@ -102,6 +105,9 @@ glm::mat4 getProjectionMatrix() {
 	return ProjectionMatrix;
 }
 
+GLuint texture_handle;
+GLuint texture_sampler;
+
 void makeMatricies()
 {
 	horizontalAngle += mouseSpeed * float(lastMousepositionX - mousepositionX);
@@ -152,9 +158,9 @@ void makeMatricies()
 void* ptr;
 void initScene()
 {
-	object.load("sphere.obj");
-	object2.load("sphere.obj");
-	object3.load("big_sphere.obj");
+	object.load( "obj\\chest_closed.obj");
+	object2.load("obj\\chest_closed.obj");
+	object3.load("obj\\chest_open.obj");
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
@@ -164,18 +170,39 @@ void initScene()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-//	ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	
-	// Make sure to tell OpenGL we're done with the pointer
-	//glUnmapBuffer(GL_ARRAY_BUFFER);
+	//	ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+
+		// Make sure to tell OpenGL we're done with the pointer
+		//glUnmapBuffer(GL_ARRAY_BUFFER);
+
+
+		//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
+		//glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
+		//glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object.getUV().size() * sizeof(glm::vec2), object.getUV().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 
-	
+	texture_handle = ilutGLLoadImage("img\\diffuse.png");
+
+	glGenTextures(1, &texture_handle);
+	glBindTexture(GL_TEXTURE_2D, texture_handle);
+
+	std::cout << ilGetInteger(IL_IMAGE_HEIGHT) << std::endl;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
+
+	glGenSamplers(1, &texture_sampler);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	//object2.load("thor.obj");
 	//
@@ -224,6 +251,8 @@ void initScene()
 	glClearDepth(1.0);
 }
 
+bool animate = false;
+
 void DisplayCallbackFunction(void)
 {
 	if (time > 1)
@@ -233,20 +262,21 @@ void DisplayCallbackFunction(void)
 	}
 	time += dt;
 	//std::cout << time << std::endl;
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	for (int count = 0; count < object.getVertex().size(); count++)
+	if (animate == true)
 	{
-		if (lerpStage == true)
-			object.getVertex()[count] = lerp<glm::vec3>(object2.getVertex()[count], object3.getVertex()[count], time);
-		else
-			object.getVertex()[count] = lerp<glm::vec3>(object3.getVertex()[count], object2.getVertex()[count], time);
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
+		for (int count = 0; count < object.getVertex().size(); count++)
+		{
+			if (lerpStage == true)
+				object.getVertex()[count] = lerp<glm::vec3>(object2.getVertex()[count], object3.getVertex()[count], time);
+			else
+				object.getVertex()[count] = lerp<glm::vec3>(object3.getVertex()[count], object2.getVertex()[count], time);
+		}
+		glBufferSubData(GL_ARRAY_BUFFER, 0, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data());
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-	glBufferSubData(GL_ARRAY_BUFFER, 0, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data());
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//memcpy(ptr, object.getVertex().data(), sizeof(object.getVertex().data()));
 
-
-	std::cout << object.getVertex()[0].x << std::endl;
+	//std::cout << object.getVertex()[0].x << std::endl;
 	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
 	glLoadIdentity();
 	rotation += 1;
@@ -255,7 +285,6 @@ void DisplayCallbackFunction(void)
 
 //	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(uiVAO[0]);
 
 
 	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
@@ -269,6 +298,7 @@ void DisplayCallbackFunction(void)
 	//ModelMatrix *= glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
+	glBindVertexArray(uiVAO[0]);
 
 	//glm::mat4 View = glm::lookAt(glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
 	//	glm::vec3(0, 0, 0), // and looks at the origin
@@ -289,6 +319,14 @@ void DisplayCallbackFunction(void)
 	//glm::mat4x4 rotationX = { sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
 	//glm::mat4x4 rotationY;
 	//glm::mat4x4 rotationZ;
+
+	int iSamplerLoc = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	glUniform1i(iSamplerLoc, 0);
+	glActiveTexture(GL_TEXTURE0 + 0);
+	//glBindTexture(GL_TEXTURE_2D, texture_handle);
+	//glBindSampler(0, texture_sampler);
+
+	glm::mat4 identity = glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };
 
 
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -392,6 +430,10 @@ void TimerCallbackFunction(int value)
 	{
 		glutWarpPointer(windowWidth / 2, windowHeight / 2);
 	}
+	if (keydown['x'])
+	{
+		animate = !animate;
+	}
 
 	static int elapsedTimeAtLastTick = 0;
 	int totalElapsedTime = glutGet(GLUT_ELAPSED_TIME);
@@ -490,6 +532,10 @@ int main(int argc, char **argv)
 	}
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
+	glEnable(GL_TEXTURE_2D);
+	ilInit();
+	iluInit();
+	ilutRenderer(ILUT_OPENGL);
 
 
 
