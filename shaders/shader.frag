@@ -1,9 +1,11 @@
 #version 330
 
-smooth in vec3 theColor;
+in vec2 texCoord;
 out vec4 outputColor;
+
+uniform sampler2D gSampler;
 
 void main()
 {
-	outputColor = vec4(theColor, 1.0);
+	outputColor = texture2D(gSampler, texCoord);
 }
