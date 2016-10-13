@@ -1,7 +1,0 @@
-﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(368,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
-  main.cpp
-c:\dodge-bomb\src\main.cpp(37): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\dodge-bomb\src\main.cpp(38): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\dodge-bomb\src\main.cpp(103): warning C4018: '<=': signed/unsigned mismatch
-  dodgebomb.vcxproj -> C:\dodge-bomb\\bin\dodgebomb.exe
-  dodgebomb.vcxproj -> C:\dodge-bomb\\bin\dodgebomb.pdb (Full PDB)
