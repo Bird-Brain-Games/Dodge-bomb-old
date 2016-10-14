@@ -19,6 +19,8 @@
 #include "shaders.h"
 #include "lerp.h"
 
+glm::vec3 sphere;
+
 // Defines and Core variables
 #define FRAMES_PER_SECOND 60
 const int FRAME_DELAY = 1000 / FRAMES_PER_SECOND; // Miliseconds per frame
@@ -34,6 +36,7 @@ float lastMousepositionY;
 
 // Initial position : on +Z
 glm::vec3 position = glm::vec3(-2.7f, 17.5f, -25.0f);
+glm::vec3 character_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 // Initial horizontal angle : toward -Z
 float horizontalAngle = 3.14f;
 // Initial vertical angle : none
@@ -51,6 +54,8 @@ float radToDeg = 180.0f / 3.14159f;
 
 bool lerpStage = true;
 
+bool bomb = false;
+
 
 /* function DisplayCallbackFunction(void)
 * Description:
@@ -58,9 +63,6 @@ bool lerpStage = true;
 *  - this draws the sprites appropriately
 */
 
-float tx = 0.0f;
-float ty = 0.0f;
-float tz = 0.0f;
 
 float rx = 0.0f;
 float ry = 0.0f;
@@ -75,13 +77,19 @@ float g = 0;
 float r = 0.2;
 float b = 0.2;
 
+int sphereSpot;
+
 bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
-UINT uiVBO[4]; // One VBO for vertices positions, one for colors
+UINT uiVBO[4]; // four vbo's two for chest and two for person
 UINT uiVAO[2]; // One VAO for pyramid
+
+UINT uiVBO2[2]; // One VBO for vertices positions, one for colors
+UINT uiVAO2[1]; // One VAO for pyramid
 
 float rotation = 0;
 float dt;
+float sphereTimer = 0;
 UINT testing;
 
 CShader vertShader;
@@ -186,7 +194,22 @@ void initScene()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
+	sphereSpot = object.size();
+	object.push_back(Loader());
+	object[sphereSpot].load("obj\\sphere.obj");
+	glGenVertexArrays(1, uiVAO2);
+	glGenBuffers(2, uiVBO2);
 
+	glBindVertexArray(uiVAO2[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[0]);
+	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getVertex().size() * sizeof(glm::vec3), object[sphereSpot].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[1]);
+	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getUV().size() * sizeof(glm::vec2), object[sphereSpot].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindVertexArray(uiVAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
@@ -336,7 +359,7 @@ void DisplayCallbackFunction(void)
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		tx,  ty,  tz,  1.0f };
+		character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
 
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
 
@@ -368,8 +391,29 @@ void DisplayCallbackFunction(void)
 	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 	//glBindSampler(0, texture_sampler);
 
+	if (bomb == true && sphereTimer > 0)
+	{
+		sphereTimer += dt;
+		glBindVertexArray(uiVAO2[0]);
+
+		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			sphere.x, sphere.y, sphere.z, 1.0f);
+		//sphere.x++;
+		//sphere.y++;
+		sphere.z++;
+		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+		glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
+		if (sphereTimer > 1.5)
+		{
+			sphereTimer = 0;
+		}
+	}
 
 
+	glBindVertexArray(uiVAO[0]);
 	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
 	glUniform1i(sampler, 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -457,49 +501,47 @@ void TimerCallbackFunction(int value)
 	glutPostRedisplay();
 	/* this call gives it a proper frame delay to hit our target FPS */
 	float tempX, tempY, tempZ;
-	tempX = tx;
-	tempY = ty;
-	tempZ = tz;
-	if (keydown['l'])
-	{
-		tx += 0.05;
-	}
+	tempX = character_pos.x;
+	tempY = character_pos.y;
+	tempZ = character_pos.z;
 	if (keydown['j'])
 	{
-		tx -= 0.05;
+		character_pos.x += 0.05;
+	}
+	if (keydown['l'])
+	{
+		character_pos.x -= 0.05;
 	}
 	if (keydown['u'])
 	{
-		ty += 0.05;
+		character_pos.y += 0.05;
 	}
 	if (keydown['o'])
 	{
-		ty -= 0.05;
+		character_pos.y -= 0.05;
 	}
 	if (keydown['i'])
 	{
-		tz += 0.05;
+		character_pos.z += 0.05;
 	}
 	if (keydown['k'])
 	{
-		tz -= 0.05;
+		character_pos.z -= 0.05;
 	}
 
 
-	if (tz > tempZ)
+	if (character_pos.z > tempZ)
 	{
 		animate = true;
 		dirForward = true;
 	}
-	else if (tz < tempZ)
+	else if (character_pos.z < tempZ)
 	{
 		animate = true;
 		dirForward = false;
 	}
 	else
 		animate = false;
-
-	std::cout << "animate: " << animate << " Zstart: " << tempZ << " Zend " << tz << std::endl;
 
 	if (keydown['z'])
 	{
@@ -520,6 +562,18 @@ void TimerCallbackFunction(int value)
 	if (keydown['c'])
 	{
 		cameraLock = !cameraLock;
+	}
+	if (keydown[32])
+	{
+		if (sphereTimer <= 0)
+		{
+			bomb = true;
+			sphere.x = character_pos.x;
+			sphere.y = character_pos.y;
+			sphere.z = character_pos.z;
+			sphereTimer += dt;
+		}
+
 	}
 
 	static int elapsedTimeAtLastTick = 0;
