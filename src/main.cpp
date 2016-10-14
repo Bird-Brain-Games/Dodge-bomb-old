@@ -33,7 +33,7 @@ float lastMousepositionX;
 float lastMousepositionY;
 
 // Initial position : on +Z
-glm::vec3 position = glm::vec3(0, 0, 5);
+glm::vec3 position = glm::vec3(-2.7f, 17.5f, -25.0f);
 // Initial horizontal angle : toward -Z
 float horizontalAngle = 3.14f;
 // Initial vertical angle : none
@@ -75,7 +75,7 @@ float g = 0;
 float r = 0.2;
 float b = 0.2;
 
-bool lock = true; //locks the mouse to the center of the screen;
+bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
 UINT uiVBO[4]; // One VBO for vertices positions, one for colors
 UINT uiVAO[2]; // One VAO for pyramid
@@ -86,9 +86,7 @@ UINT testing;
 
 CShader vertShader;
 CShader fragShader;
-Loader object;
-Loader object2;
-Loader object3;
+vector<Loader> object;
 
 CShader shVertex, shFragment;
 CShaderProgram spMain;
@@ -105,13 +103,21 @@ glm::mat4 getProjectionMatrix() {
 	return ProjectionMatrix;
 }
 
-GLuint texture_handle;
-GLuint texture_sampler;
-
+vector<GLuint> texture_handle;
+vector<GLuint> texture_sampler;
+bool cameraLock = true;
 void makeMatricies()
 {
-	horizontalAngle += mouseSpeed * float(lastMousepositionX - mousepositionX);
-	verticalAngle += mouseSpeed * float(lastMousepositionY - mousepositionY);
+	if (cameraLock == false)
+	{
+		horizontalAngle += mouseSpeed * float(lastMousepositionX - mousepositionX);
+		verticalAngle += mouseSpeed * float(lastMousepositionY - mousepositionY);
+	}
+	else
+	{
+		horizontalAngle = 0.0599999987;
+		verticalAngle = -0.219999850;
+	}
 	glm::vec3 direction(
 		cos(verticalAngle) * sin(horizontalAngle),
 		sin(verticalAngle),
@@ -158,51 +164,72 @@ void makeMatricies()
 void* ptr;
 void initScene()
 {
-	object.load( "obj\\chest_closed.obj");
-	object2.load("obj\\chest_closed.obj");
-	object3.load("obj\\chest_open.obj");
+	object.push_back(Loader());
+	object.push_back(Loader());
+	object.push_back(Loader());
+	object.push_back(Loader());
+	object[0].load("obj\\chest_closed.obj");
+	object[1].load("obj\\simple_man_base.obj");
+	object[2].load("obj\\simple_man_walk.obj");
+	object[3].load("obj\\simple_man_base.obj");
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object[0].getVertex().size() * sizeof(glm::vec3), object[0].getVertex().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	//	ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-
-		// Make sure to tell OpenGL we're done with the pointer
-		//glUnmapBuffer(GL_ARRAY_BUFFER);
-
-		//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-		//glBufferData(GL_ARRAY_BUFFER, object.getColor().size() * sizeof(float), object.getColor().data(), GL_STATIC_DRAW);
-		//glEnableVertexAttribArray(1);
-		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, object.getUV().size() * sizeof(glm::vec2), object.getUV().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object[0].getUV().size() * sizeof(glm::vec2), object[0].getUV().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 
-	texture_handle = ilutGLLoadImage("img\\diffuse.png");
 
-	glGenTextures(1, &texture_handle);
-	glBindTexture(GL_TEXTURE_2D, texture_handle);
+	glBindVertexArray(uiVAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	std::cout << ilGetInteger(IL_IMAGE_HEIGHT) << std::endl;
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
+	glBufferData(GL_ARRAY_BUFFER, object[3].getUV().size() * sizeof(glm::vec2), object[3].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	texture_handle.push_back(0);
+	texture_handle.push_back(0);
+	texture_sampler.push_back(0);
+	texture_sampler.push_back(0);
+
+	glGenTextures(2, &texture_handle[0]);
+	glGenSamplers(2, &texture_sampler[0]);
+
+	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+
+	texture_handle[0] = ilutGLLoadImage("img\\diffuse.png");
 
 	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
 		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
 		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
 		ilGetData()); /* Texture specification */
 
-	glGenSamplers(1, &texture_sampler);
+
+	texture_handle[1] = ilutGLLoadImage("diffuse.png");
+	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+
+
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
 	//object2.load("thor.obj");
 	//
 	//
@@ -251,27 +278,36 @@ void initScene()
 }
 
 bool animate = false;
-
+bool dirForward = true;
 void DisplayCallbackFunction(void)
 {
-	if (time > 1)
-	{
-		time = 0;
-		lerpStage = !lerpStage;
-	}
-	time += dt;
-	//std::cout << time << std::endl;
 	if (animate == true)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-		for (int count = 0; count < object.getVertex().size(); count++)
+		if (time > 1)
+		{
+			time = 0;
+			lerpStage = !lerpStage;
+		}
+		else if (time < 0)
+		{
+			time = 1;
+			lerpStage = !lerpStage;
+		}
+		if (dirForward == true)
+			time += dt;
+		else
+			time -= dt;
+		//std::cout << time << std::endl;
+
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+		for (int count = 0; count < object[3].getVertex().size(); count++)
 		{
 			if (lerpStage == true)
-				object.getVertex()[count] = lerp<glm::vec3>(object2.getVertex()[count], object3.getVertex()[count], time);
+				object[3].getVertex()[count] = lerp<glm::vec3>(object[1].getVertex()[count], object[2].getVertex()[count], time);
 			else
-				object.getVertex()[count] = lerp<glm::vec3>(object3.getVertex()[count], object2.getVertex()[count], time);
+				object[3].getVertex()[count] = lerp<glm::vec3>(object[2].getVertex()[count], object[1].getVertex()[count], time);
 		}
-		glBufferSubData(GL_ARRAY_BUFFER, 0, object.getVertex().size() * sizeof(glm::vec3), object.getVertex().data());
+		glBufferSubData(GL_ARRAY_BUFFER, 0, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -282,7 +318,7 @@ void DisplayCallbackFunction(void)
 
 	/* clear the screen */
 
-//	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
+	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -293,9 +329,16 @@ void DisplayCallbackFunction(void)
 	makeMatricies();
 	glm::mat4 ProjectionMatrix = getProjectionMatrix();
 	glm::mat4 ViewMatrix = getViewMatrix();
-	glm::mat4 ModelMatrix = glm::mat4(1.0);
-	//ModelMatrix *= glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
-	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	glm::mat4 identity = glm::mat4(1.0);
+
+
+	glm::mat4 ModelMatrix = glm::mat4{
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		tx,  ty,  tz,  1.0f };
+
+	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
 
 	glBindVertexArray(uiVAO[0]);
 
@@ -319,20 +362,41 @@ void DisplayCallbackFunction(void)
 	//glm::mat4x4 rotationY;
 	//glm::mat4x4 rotationZ;
 
-	int iSamplerLoc = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	glUniform1i(iSamplerLoc, 0);
-	glActiveTexture(GL_TEXTURE0 + 0);
-	//glBindTexture(GL_TEXTURE_2D, texture_handle);
+	//texture_sampler[0] = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	//glUniform1i(texture_sampler[0], 0);
+	//glActiveTexture(GL_TEXTURE0 + 0);
+	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 	//glBindSampler(0, texture_sampler);
 
-	glm::mat4 identity = glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };
 
+
+	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	glUniform1i(sampler, 0);
+	glActiveTexture(GL_TEXTURE0);
+	//glBindSampler(0, texture_sampler[0]);
+	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object.getVertex().size());
+	glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
+
+	glBindVertexArray(uiVAO[1]);
+	//texture_sampler[1] = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	//glUniform1i(texture_sampler[1], 0);
+	//glActiveTexture(GL_TEXTURE1);
+
+	//glActiveTexture(GL_TEXTURE0 + 0);
+//	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+	//glBindSampler(0, texture_sampler2);
+	//glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, 0, object[3].getVertex().size());
 
 	//glBindVertexArray(uiVAO[1]);
-	//glm::mat4 identity = glm::mat4{ sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };
+
 	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	//glDrawArrays(GL_TRIANGLES, 0, object2.getVertex().size());
 
@@ -363,7 +427,7 @@ void DisplayCallbackFunction(void)
 */
 void KeyboardCallbackFunction(unsigned char key, int x, int y)
 {
-	std::cout << "Key Down:" << (int)key << std::endl;
+	//std::cout << "Key Down:" << (int)key << std::endl;
 
 	keydown[key] = true;
 
@@ -386,11 +450,16 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 *  - changes the frame number and calls for a redisplay
 *  - FRAME_DELAY is the number of milliseconds to wait before calling the timer again
 */
+
 void TimerCallbackFunction(int value)
 {
 	/* this call makes it actually show up on screen */
 	glutPostRedisplay();
 	/* this call gives it a proper frame delay to hit our target FPS */
+	float tempX, tempY, tempZ;
+	tempX = tx;
+	tempY = ty;
+	tempZ = tz;
 	if (keydown['l'])
 	{
 		tx += 0.05;
@@ -399,23 +468,38 @@ void TimerCallbackFunction(int value)
 	{
 		tx -= 0.05;
 	}
-	if (keydown['i'])
+	if (keydown['u'])
 	{
 		ty += 0.05;
 	}
-	if (keydown['k'])
+	if (keydown['o'])
 	{
 		ty -= 0.05;
 	}
-	if (keydown['u'])
+	if (keydown['i'])
 	{
 		tz += 0.05;
 	}
-	if (keydown['o'])
+	if (keydown['k'])
 	{
 		tz -= 0.05;
 	}
 
+
+	if (tz > tempZ)
+	{
+		animate = true;
+		dirForward = true;
+	}
+	else if (tz < tempZ)
+	{
+		animate = true;
+		dirForward = false;
+	}
+	else
+		animate = false;
+
+	std::cout << "animate: " << animate << " Zstart: " << tempZ << " Zend " << tz << std::endl;
 
 	if (keydown['z'])
 	{
@@ -432,6 +516,10 @@ void TimerCallbackFunction(int value)
 	if (keydown['x'])
 	{
 		animate = !animate;
+	}
+	if (keydown['c'])
+	{
+		cameraLock = !cameraLock;
 	}
 
 	static int elapsedTimeAtLastTick = 0;
