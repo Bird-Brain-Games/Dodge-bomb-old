@@ -168,7 +168,7 @@
     <ClCompile Include="src\shaders.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\lerp.h" />
+    <ClInclude Include="src\math.h" />
     <ClInclude Include="src\objLoader.h" />
     <ClInclude Include="src\shaderLoader.h" />
     <ClInclude Include="src\shaders.h" />

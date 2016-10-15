@@ -17,7 +17,7 @@
 #include "objLoader.h"
 #include "shaderLoader.h"
 #include "shaders.h"
-#include "lerp.h"
+#include "math.h"
 
 glm::vec3 sphere;
 
@@ -180,6 +180,7 @@ void initScene()
 	object[1].load("obj\\simple_man_base.obj");
 	object[2].load("obj\\simple_man_walk.obj");
 	object[3].load("obj\\simple_man_base.obj");
+
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
@@ -253,18 +254,7 @@ void initScene()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//object2.load("thor.obj");
-	//
-	//
-	//glBindVertexArray(uiVAO[1]);
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-	//glBufferData(GL_ARRAY_BUFFER, object2.getVertex().size() * sizeof(float), object2.getVertex().data(), GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	//glBufferData(GL_ARRAY_BUFFER, object2.getColor().size() * sizeof(float), object2.getColor().data(), GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
@@ -346,7 +336,6 @@ void DisplayCallbackFunction(void)
 
 
 	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
 
 
 	makeMatricies();
@@ -365,31 +354,6 @@ void DisplayCallbackFunction(void)
 
 	glBindVertexArray(uiVAO[0]);
 
-	//glm::mat4 View = glm::lookAt(glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
-	//	glm::vec3(0, 0, 0), // and looks at the origin
-	//	glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-	//);
-	//glm::mat4 Model = glm::mat4(1.0f);
-	//glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the 
-
-	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
-	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
-	// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
-	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-	// Render rotating pyramid in the middle
-	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
-	//mCurrent = glm::translate(mModelView, test);
-	//glm::mat4x4 mCurrent = { 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-	//glm::mat4x4 rotationX = { sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
-	//glm::mat4x4 rotationY;
-	//glm::mat4x4 rotationZ;
-
-	//texture_sampler[0] = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	//glUniform1i(texture_sampler[0], 0);
-	//glActiveTexture(GL_TEXTURE0 + 0);
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-	//glBindSampler(0, texture_sampler);
 
 	if (bomb == true && sphereTimer > 0)
 	{
@@ -420,18 +384,12 @@ void DisplayCallbackFunction(void)
 	//glBindSampler(0, texture_sampler[0]);
 	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 
+
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
 
 	glBindVertexArray(uiVAO[1]);
-	//texture_sampler[1] = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	//glUniform1i(texture_sampler[1], 0);
-	//glActiveTexture(GL_TEXTURE1);
 
-	//glActiveTexture(GL_TEXTURE0 + 0);
-//	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
-	//glBindSampler(0, texture_sampler2);
-	//glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
 
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
@@ -439,29 +397,9 @@ void DisplayCallbackFunction(void)
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[3].getVertex().size());
 
-	//glBindVertexArray(uiVAO[1]);
-
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object2.getVertex().size());
-
-	//int iModelViewLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewMatrix");
-	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
-	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
-	//// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
-	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-	//// Render rotating pyramid in the middle
-	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
-	//mCurrent = glm::translate(mModelView, test);
-	//glUniformMatrix4fv(iModelViewLoc, 1, GL_FALSE, glm::value_ptr(mCurrent));
-	//glDrawArrays(GL_TRIANGLES, 0, object.getVertexOrder().size());
-
-
+	
 	/* Swap Buffers to Make it show up on screen */
 	glutSwapBuffers();
-
-	//glDetachShader(testing, vertShader.getID());
-	//glDetachShader(testing, fragShader.getID());
 
 }
 

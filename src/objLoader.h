@@ -25,7 +25,7 @@ private:
 	std::vector<glm::vec2> out_uvs;
 	std::vector<glm::vec3> out_normals;
 	std::vector<float> color;
-	std::vector<BYTE> data;
+	//std::vector<BYTE> data;
 	UINT uiVBO;
 	UINT uiVAO;
 	UINT uiBuffer;
