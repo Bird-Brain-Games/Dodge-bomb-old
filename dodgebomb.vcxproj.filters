@@ -10,6 +10,6 @@
     <ClInclude Include="src\objLoader.h" />
     <ClInclude Include="src\shaderLoader.h" />
     <ClInclude Include="src\shaders.h" />
-    <ClInclude Include="src\lerp.h" />
+    <ClInclude Include="src\math.h" />
   </ItemGroup>
 </Project>
