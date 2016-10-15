@@ -204,7 +204,7 @@ void initScene()
 	glGenBuffers(4, uiVBO);
 
 	// Load the chest
-	//bindObjectData(uiVAO, 0, uiVBO, object[0]);
+	bindObjectData(uiVAO, 0, uiVBO, object[0]);
 
 	sphereSpot = object.size();
 	object.push_back(Loader("obj\\sphere.obj"));

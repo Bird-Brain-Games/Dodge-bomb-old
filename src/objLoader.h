@@ -18,10 +18,10 @@ public:
 	Loader();
 	Loader(std::string);
 	bool load(std::string);
-	std::vector<glm::vec3> getVertex() const;
-	std::vector<glm::vec2> getUV() const;
-	std::vector<glm::vec3>& getNormal();
-	std::vector<float>& getColor();
+	std::vector<glm::vec3> const& getVertex() const;
+	std::vector<glm::vec2> const& getUV() const;
+	std::vector<glm::vec3> const& getNormal() const;
+	std::vector<float> const& getColor() const;
 
 	void setVertex(int index, glm::vec3 newVertex);
 private:
