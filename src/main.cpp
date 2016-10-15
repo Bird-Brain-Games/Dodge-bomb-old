@@ -95,6 +95,11 @@ UINT testing;
 CShader vertShader;
 CShader fragShader;
 vector<Loader> object;
+vector<glm::vec3> dimensions;
+vector<boundingBox> boundingBoxes;
+vector<Loader> animation;
+
+Collision aabb;
 
 CShader shVertex, shFragment;
 CShaderProgram spMain;
@@ -174,12 +179,25 @@ void initScene()
 {
 	object.push_back(Loader());
 	object.push_back(Loader());
-	object.push_back(Loader());
-	object.push_back(Loader());
 	object[0].load("obj\\chest_closed.obj");
+
+	dimensions.push_back(glm::vec3(1.2f, 1.05f, 1.15f));// Chest
+	dimensions.push_back(glm::vec3(2.35f, 2.7f, 1.45f));// Robot
+
+	boundingBox temp;
+	temp.max = glm::vec3(0) + dimensions[0]; 
+	temp.min = glm::vec3(0) - dimensions[0];
+	boundingBoxes.push_back(temp);
+	temp.max = character_pos + dimensions[1];
+	temp.min = character_pos - dimensions[1];
+	boundingBoxes.push_back(temp);
+
+
 	object[1].load("obj\\simple_man_base.obj");
-	object[2].load("obj\\simple_man_walk.obj");
-	object[3].load("obj\\simple_man_base.obj");
+	animation.push_back(Loader());
+	animation.push_back(Loader());
+	animation[0].load("obj\\simple_man_base.obj");
+	animation[1].load("obj\\simple_man_walk.obj");
 
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
@@ -214,12 +232,12 @@ void initScene()
 
 	glBindVertexArray(uiVAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, object[3].getUV().size() * sizeof(glm::vec2), object[3].getUV().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, object[1].getUV().size() * sizeof(glm::vec2), object[1].getUV().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -294,6 +312,8 @@ bool animate = false;
 bool dirForward = true;
 void DisplayCallbackFunction(void)
 {
+
+
 	if (animate == true)
 	{
 		if (time > 1)
@@ -313,17 +333,25 @@ void DisplayCallbackFunction(void)
 		//std::cout << time << std::endl;
 
 		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-		for (int count = 0; count < object[3].getVertex().size(); count++)
+		for (int count = 0; count < object[1].getVertex().size(); count++)
 		{
 			if (lerpStage == true)
-				object[3].getVertex()[count] = lerp<glm::vec3>(object[1].getVertex()[count], object[2].getVertex()[count], time);
+				object[1].getVertex()[count] = lerp<glm::vec3>(animation[0].getVertex()[count], animation[1].getVertex()[count], time);
 			else
-				object[3].getVertex()[count] = lerp<glm::vec3>(object[2].getVertex()[count], object[1].getVertex()[count], time);
+				object[1].getVertex()[count] = lerp<glm::vec3>(animation[1].getVertex()[count], animation[0].getVertex()[count], time);
 		}
-		glBufferSubData(GL_ARRAY_BUFFER, 0, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data());
+		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[1]) == true)
+	{
+		std::cout << "true" << std::endl;
+	}
+	else
+	{
+		std::cout << "false" << std::endl;
+	}
 	//std::cout << object.getVertex()[0].x << std::endl;
 	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
 	glLoadIdentity();
@@ -395,9 +423,11 @@ void DisplayCallbackFunction(void)
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object[3].getVertex().size());
+	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
-	
+	boundingBoxes[1].max = character_pos + dimensions[1];
+	boundingBoxes[1].min = character_pos - dimensions[1];
+
 	/* Swap Buffers to Make it show up on screen */
 	glutSwapBuffers();
 
