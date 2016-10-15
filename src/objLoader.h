@@ -15,11 +15,15 @@ public:
 class Loader
 {
 public:
+	Loader();
+	Loader(std::string);
 	bool load(std::string);
-	std::vector<glm::vec3>& getVertex();
-	std::vector<glm::vec2>& getUV();
+	std::vector<glm::vec3> getVertex() const;
+	std::vector<glm::vec2> getUV() const;
 	std::vector<glm::vec3>& getNormal();
 	std::vector<float>& getColor();
+
+	void setVertex(int index, glm::vec3 newVertex);
 private:
 	std::vector<glm::vec3> out_vertices;
 	std::vector<glm::vec2> out_uvs;

@@ -57,11 +57,7 @@ bool lerpStage = true;
 bool bomb = false;
 
 
-/* function DisplayCallbackFunction(void)
-* Description:
-*  - this is the openGL display routine
-*  - this draws the sprites appropriately
-*/
+
 
 
 float rx = 0.0f;
@@ -78,6 +74,9 @@ float r = 0.2;
 float b = 0.2;
 
 int sphereSpot;
+
+bool animate = false;
+bool dirForward = true;
 
 bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
@@ -169,60 +168,54 @@ void makeMatricies()
 	);
 
 }
-void* ptr;
+
+/* 
+	Binds the object data to the stuff, i can't really remember exactly what it does
+	but it allocates in memory for the object and stuff, so that's good.
+	- VAO
+	- index of VAO
+	- VBO
+	- object being bound
+*/
+void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), Loader const& obj)
+{
+	glBindVertexArray(VAO[VAOindex]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[VAOindex * 2]);
+	glBufferData(GL_ARRAY_BUFFER, obj.getVertex().size() * sizeof(glm::vec3), obj.getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[(VAOindex * 2) + 1]);
+	glBufferData(GL_ARRAY_BUFFER, obj.getUV().size() * sizeof(glm::vec2), obj.getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+}
+
+
 void initScene()
 {
-	object.push_back(Loader());
-	object.push_back(Loader());
-	object.push_back(Loader());
-	object.push_back(Loader());
-	object[0].load("obj\\chest_closed.obj");
-	object[1].load("obj\\simple_man_base.obj");
-	object[2].load("obj\\simple_man_walk.obj");
-	object[3].load("obj\\simple_man_base.obj");
+	// Load all objects
+	object.push_back(Loader("obj\\chest_closed.obj"));
+	object.push_back(Loader("obj\\simple_man_base.obj"));
+	object.push_back(Loader("obj\\simple_man_walk.obj"));
+	object.push_back(Loader("obj\\simple_man_base.obj"));
+
 	glGenVertexArrays(2, uiVAO);
 	glGenBuffers(4, uiVBO);
 
-	glBindVertexArray(uiVAO[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, object[0].getVertex().size() * sizeof(glm::vec3), object[0].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, object[0].getUV().size() * sizeof(glm::vec2), object[0].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	// Load the chest
+	//bindObjectData(uiVAO, 0, uiVBO, object[0]);
 
 	sphereSpot = object.size();
-	object.push_back(Loader());
-	object[sphereSpot].load("obj\\sphere.obj");
+	object.push_back(Loader("obj\\sphere.obj"));
 	glGenVertexArrays(1, uiVAO2);
 	glGenBuffers(2, uiVBO2);
 
-	glBindVertexArray(uiVAO2[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[0]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getVertex().size() * sizeof(glm::vec3), object[sphereSpot].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	// Bind spongebob and the sphere
+	bindObjectData(uiVAO2, 0, uiVBO2, object[sphereSpot]);
+	bindObjectData(uiVAO, 1, uiVBO, object[3]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[1]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getUV().size() * sizeof(glm::vec2), object[sphereSpot].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(uiVAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, object[3].getUV().size() * sizeof(glm::vec2), object[3].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-
+	// Just so vector isn't empty (right now)
 	texture_handle.push_back(0);
 	texture_handle.push_back(0);
 	texture_sampler.push_back(0);
@@ -253,18 +246,6 @@ void initScene()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//object2.load("thor.obj");
-	//
-	//
-	//glBindVertexArray(uiVAO[1]);
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-	//glBufferData(GL_ARRAY_BUFFER, object2.getVertex().size() * sizeof(float), object2.getVertex().data(), GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	//glBufferData(GL_ARRAY_BUFFER, object2.getColor().size() * sizeof(float), object2.getColor().data(), GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
@@ -300,8 +281,11 @@ void initScene()
 	glClearDepth(1.0);
 }
 
-bool animate = false;
-bool dirForward = true;
+/* function DisplayCallbackFunction(void)
+* Description:
+*  - this is the openGL display routine
+*  - this draws the sprites appropriately
+*/
 void DisplayCallbackFunction(void)
 {
 	if (animate == true)
@@ -326,9 +310,9 @@ void DisplayCallbackFunction(void)
 		for (int count = 0; count < object[3].getVertex().size(); count++)
 		{
 			if (lerpStage == true)
-				object[3].getVertex()[count] = lerp<glm::vec3>(object[1].getVertex()[count], object[2].getVertex()[count], time);
+				object[3].setVertex(count, lerp<glm::vec3>(object[1].getVertex()[count], object[2].getVertex()[count], time));
 			else
-				object[3].getVertex()[count] = lerp<glm::vec3>(object[2].getVertex()[count], object[1].getVertex()[count], time);
+				object[3].setVertex(count, lerp<glm::vec3>(object[2].getVertex()[count], object[1].getVertex()[count], time));
 		}
 		glBufferSubData(GL_ARRAY_BUFFER, 0, object[3].getVertex().size() * sizeof(glm::vec3), object[3].getVertex().data());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -364,32 +348,6 @@ void DisplayCallbackFunction(void)
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
 
 	glBindVertexArray(uiVAO[0]);
-
-	//glm::mat4 View = glm::lookAt(glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
-	//	glm::vec3(0, 0, 0), // and looks at the origin
-	//	glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-	//);
-	//glm::mat4 Model = glm::mat4(1.0f);
-	//glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the 
-
-	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
-	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
-	// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
-	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-	// Render rotating pyramid in the middle
-	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
-	//mCurrent = glm::translate(mModelView, test);
-	//glm::mat4x4 mCurrent = { 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-	//glm::mat4x4 rotationX = { sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, tx, ty, tz, 1.0 };;
-	//glm::mat4x4 rotationY;
-	//glm::mat4x4 rotationZ;
-
-	//texture_sampler[0] = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	//glUniform1i(texture_sampler[0], 0);
-	//glActiveTexture(GL_TEXTURE0 + 0);
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-	//glBindSampler(0, texture_sampler);
 
 	if (bomb == true && sphereTimer > 0)
 	{
@@ -438,24 +396,6 @@ void DisplayCallbackFunction(void)
 
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[3].getVertex().size());
-
-	//glBindVertexArray(uiVAO[1]);
-
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object2.getVertex().size());
-
-	//int iModelViewLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewMatrix");
-	//int iProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "projectionMatrix");
-	//glUniformMatrix4fv(iProjectionLoc, 1, GL_FALSE, glm::value_ptr(glm::perspective(90.0f, (float)windowWidth / windowHeight, 0.001f, 10000.0f))); // sends data to shader
-	//// first value is the variable being sent, second is the number of matrices, third is for transposing (glm and glsl use same), fourth is the location of the data being sent 
-	//glm::mat4 mModelView = glm::lookAt(glm::vec3(0, 15, 40), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//glm::mat4 mCurrent = glm::rotate(mModelView, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-	//// Render rotating pyramid in the middle
-	//glm::vec3 test = glm::vec3(0.0, float(sin(rotation*degToRad)), 0.0f);
-	//mCurrent = glm::translate(mModelView, test);
-	//glUniformMatrix4fv(iModelViewLoc, 1, GL_FALSE, glm::value_ptr(mCurrent));
-	//glDrawArrays(GL_TRIANGLES, 0, object.getVertexOrder().size());
-
 
 	/* Swap Buffers to Make it show up on screen */
 	glutSwapBuffers();

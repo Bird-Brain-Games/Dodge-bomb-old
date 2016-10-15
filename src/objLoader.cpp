@@ -6,6 +6,17 @@
 #include <gl\GL.h>
 #include <gl\GLU.h>
 #include "objLoader.h"
+
+Loader::Loader()
+{
+
+}
+
+Loader::Loader(std::string s)
+{
+	load(s);
+}
+
 bool Loader::load(std::string fileName)
 {
 	FILE *file = fopen(fileName.c_str(), "r");//second parameter specifies what were doing with file ie read
@@ -127,7 +138,12 @@ bool Loader::load(std::string fileName)
 
 }
 
-std::vector<glm::vec3>& Loader::getVertex() { return out_vertices; }
-std::vector<glm::vec2>& Loader::getUV() { return out_uvs; }
+std::vector<glm::vec3> Loader::getVertex() const { return out_vertices; }
+std::vector<glm::vec2> Loader::getUV() const { return out_uvs; }
 std::vector<glm::vec3>& Loader::getNormal() { return out_normals; }
 std::vector<float>& Loader::getColor() { return color; }
+
+void Loader::setVertex(int index, glm::vec3 newVertex)
+{
+	out_vertices.at(index) = newVertex;
+}
