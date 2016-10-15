@@ -138,10 +138,10 @@ bool Loader::load(std::string fileName)
 
 }
 
-std::vector<glm::vec3> Loader::getVertex() const { return out_vertices; }
-std::vector<glm::vec2> Loader::getUV() const { return out_uvs; }
-std::vector<glm::vec3>& Loader::getNormal() { return out_normals; }
-std::vector<float>& Loader::getColor() { return color; }
+std::vector<glm::vec3> const& Loader::getVertex() const { return out_vertices; }
+std::vector<glm::vec2> const& Loader::getUV() const { return out_uvs; }
+std::vector<glm::vec3> const& Loader::getNormal() const { return out_normals; }
+std::vector<float> const& Loader::getColor() const { return color; }
 
 void Loader::setVertex(int index, glm::vec3 newVertex)
 {
