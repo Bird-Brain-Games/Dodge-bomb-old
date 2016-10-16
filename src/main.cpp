@@ -19,7 +19,6 @@
 #include "shaders.h"
 #include "math.h"
 
-glm::vec3 sphere;
 
 // Defines and Core variables
 #define FRAMES_PER_SECOND 60
@@ -34,15 +33,19 @@ float mousepositionY;
 float lastMousepositionX;
 float lastMousepositionY;
 
-// Initial position : on +Z
-glm::vec3 position = glm::vec3(-2.7f, 17.5f, -25.0f);
-glm::vec3 character_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+glm::vec3 position = glm::vec3(-9.6f, 28.7f, -75.0f);
+glm::vec3 character_pos = glm::vec3(0.0f, -0.35f, -40.6f);
+glm::vec3 character2_pos = glm::vec3(0.0f, -0.35f, 40.6f);
+glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 // Initial horizontal angle : toward -Z
 float horizontalAngle = 3.14f;
 // Initial vertical angle : none
 float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
+
+float playerSpeed = 0.2f; // the players speed. used to how fast animation needs to be.
 
 float speed = 0.3f; // 1 units / second
 float mouseSpeed = 0.005f;
@@ -81,11 +84,11 @@ int sphereSpot;
 
 bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
-UINT uiVBO[4]; // four vbo's two for chest and two for person
-UINT uiVAO[2]; // One VAO for pyramid
+UINT uiVBO[4];
+UINT uiVAO[2];
 
-UINT uiVBO2[2]; // One VBO for vertices positions, one for colors
-UINT uiVAO2[1]; // One VAO for pyramid
+UINT uiVBO2[4];
+UINT uiVAO2[2];
 
 float rotation = 0;
 float dt;
@@ -96,6 +99,7 @@ CShader vertShader;
 CShader fragShader;
 vector<Loader> object;
 vector<glm::vec3> dimensions;
+// chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
 vector<Loader> animation;
 
@@ -165,7 +169,7 @@ void makeMatricies()
 
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(initialFoV, (float)windowWidth / windowHeight, 0.1f, 100.0f);
+	ProjectionMatrix = glm::perspective(initialFoV, (float)windowWidth / windowHeight, 0.1f, 10000.0f);
 	// Camera matrix
 	ViewMatrix = glm::lookAt(
 		position,           // Camera is here
@@ -183,13 +187,24 @@ void initScene()
 
 	dimensions.push_back(glm::vec3(1.2f, 1.05f, 1.15f));// Chest
 	dimensions.push_back(glm::vec3(2.35f, 2.7f, 1.45f));// Robot
+	dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
+	dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
 	boundingBox temp;
-	temp.max = glm::vec3(0) + dimensions[0]; 
+	temp.max = glm::vec3(0) + dimensions[0];
 	temp.min = glm::vec3(0) - dimensions[0];
 	boundingBoxes.push_back(temp);
 	temp.max = character_pos + dimensions[1];
 	temp.min = character_pos - dimensions[1];
+	boundingBoxes.push_back(temp);
+	temp.max = glm::vec3(0.0f, -3.0f, 0.0f) + dimensions[2];
+	temp.min = glm::vec3(0.0f, -3.0f, 0.0f) - dimensions[2];
+	boundingBoxes.push_back(temp);
+	temp.max = character2_pos + dimensions[1];
+	temp.min = character2_pos - dimensions[1];
+	boundingBoxes.push_back(temp);
+	temp.max = sphere_pos + dimensions[3];
+	temp.min = sphere_pos - dimensions[3];
 	boundingBoxes.push_back(temp);
 
 
@@ -215,9 +230,12 @@ void initScene()
 
 	sphereSpot = object.size();
 	object.push_back(Loader());
-	object[sphereSpot].load("obj\\sphere.obj");
-	glGenVertexArrays(1, uiVAO2);
-	glGenBuffers(2, uiVBO2);
+	object[sphereSpot].load("obj\\bomb.obj");
+	object.push_back(Loader());
+	object[sphereSpot + 1].load("obj\\plane.obj");
+	glGenVertexArrays(2, uiVAO2);
+	glGenBuffers(4, uiVBO2);
+
 
 	glBindVertexArray(uiVAO2[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[0]);
@@ -229,6 +247,18 @@ void initScene()
 	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getUV().size() * sizeof(glm::vec2), object[sphereSpot].getUV().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindVertexArray(uiVAO2[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[2]);
+	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot + 1].getVertex().size() * sizeof(glm::vec3), object[sphereSpot + 1].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[3]);
+	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot + 1].getUV().size() * sizeof(glm::vec2), object[sphereSpot + 1].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
 
 	glBindVertexArray(uiVAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
@@ -244,11 +274,14 @@ void initScene()
 
 	texture_handle.push_back(0);
 	texture_handle.push_back(0);
+	texture_handle.push_back(0);
+
+	texture_sampler.push_back(0);
 	texture_sampler.push_back(0);
 	texture_sampler.push_back(0);
 
-	glGenTextures(2, &texture_handle[0]);
-	glGenSamplers(2, &texture_sampler[0]);
+	glGenTextures(3, &texture_handle[0]);
+	glGenSamplers(3, &texture_sampler[0]);
 
 	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 
@@ -262,6 +295,16 @@ void initScene()
 
 	texture_handle[1] = ilutGLLoadImage("diffuse.png");
 	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+
+
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
+
+	texture_handle[2] = ilutGLLoadImage("img\\floor.jpg");
+	glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
 
 
 
@@ -314,6 +357,7 @@ void DisplayCallbackFunction(void)
 {
 
 
+
 	if (animate == true)
 	{
 		if (time > 1)
@@ -327,9 +371,9 @@ void DisplayCallbackFunction(void)
 			lerpStage = !lerpStage;
 		}
 		if (dirForward == true)
-			time += dt;
+			time += dt * (1 + playerSpeed);
 		else
-			time -= dt;
+			time -= dt * (1 + playerSpeed);
 		//std::cout << time << std::endl;
 
 		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
@@ -343,15 +387,16 @@ void DisplayCallbackFunction(void)
 		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-
-	if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[1]) == true)
+	//gravity
+	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
 	{
-		std::cout << "true" << std::endl;
+		
 	}
 	else
 	{
-		std::cout << "false" << std::endl;
+		character_pos.y -= 0.01;
 	}
+	//if (boundingBoxes[3])
 	//std::cout << object.getVertex()[0].x << std::endl;
 	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
 	glLoadIdentity();
@@ -364,7 +409,9 @@ void DisplayCallbackFunction(void)
 
 
 	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-
+	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	glUniform1i(sampler, 0);
+	glActiveTexture(GL_TEXTURE0);
 
 	makeMatricies();
 	glm::mat4 ProjectionMatrix = getProjectionMatrix();
@@ -378,37 +425,50 @@ void DisplayCallbackFunction(void)
 		0.0f, 0.0f, 1.0f, 0.0f,
 		character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
 
-	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
+	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, -3.0f, 0.0f, 1.0f);;
 
-	glBindVertexArray(uiVAO[0]);
 
+
+	glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
+	glBindVertexArray(uiVAO2[1]);
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
 
 	if (bomb == true && sphereTimer > 0)
 	{
-		sphereTimer += dt;
+		glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 		glBindVertexArray(uiVAO2[0]);
+		sphereTimer += dt;
 
 		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
-			sphere.x, sphere.y, sphere.z, 1.0f);
+			sphere_pos.x, sphere_pos.y, sphere_pos.z, 1.0f);
 		//sphere.x++;
 		//sphere.y++;
-		sphere.z++;
+		sphere_pos.z++;
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 		glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
 		if (sphereTimer > 1.5)
 		{
 			sphereTimer = 0;
 		}
+		boundingBoxes[4].max = sphere_pos + dimensions[3];
+		boundingBoxes[4].min = sphere_pos - dimensions[3];
+		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[3]))//checks whether we hit the other person
+		{
+			std::cout << "score" << std::endl;
+		}
 	}
 
 
 	glBindVertexArray(uiVAO[0]);
-	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	glUniform1i(sampler, 0);
-	glActiveTexture(GL_TEXTURE0);
+	
 	//glBindSampler(0, texture_sampler[0]);
 	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 
@@ -420,13 +480,25 @@ void DisplayCallbackFunction(void)
 
 	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
 
+	//character player 1
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
+	//character player 2
+	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		character2_pos.x, character2_pos.y, character2_pos.z, 1.0f );
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
+
 	boundingBoxes[1].max = character_pos + dimensions[1];
 	boundingBoxes[1].min = character_pos - dimensions[1];
+
+
 
 	/* Swap Buffers to Make it show up on screen */
 	glutSwapBuffers();
@@ -474,27 +546,27 @@ void TimerCallbackFunction(int value)
 	tempZ = character_pos.z;
 	if (keydown['j'])
 	{
-		character_pos.x += 0.05;
+		character_pos.x += playerSpeed;
 	}
 	if (keydown['l'])
 	{
-		character_pos.x -= 0.05;
+		character_pos.x -= playerSpeed;
 	}
 	if (keydown['u'])
 	{
-		character_pos.y += 0.05;
+		character_pos.y += playerSpeed;
 	}
 	if (keydown['o'])
 	{
-		character_pos.y -= 0.05;
+		character_pos.y -= playerSpeed;
 	}
 	if (keydown['i'])
 	{
-		character_pos.z += 0.05;
+		character_pos.z += playerSpeed;
 	}
 	if (keydown['k'])
 	{
-		character_pos.z -= 0.05;
+		character_pos.z -= playerSpeed;
 	}
 
 
@@ -536,9 +608,9 @@ void TimerCallbackFunction(int value)
 		if (sphereTimer <= 0)
 		{
 			bomb = true;
-			sphere.x = character_pos.x;
-			sphere.y = character_pos.y;
-			sphere.z = character_pos.z;
+			sphere_pos.x = character_pos.x;
+			sphere_pos.y = character_pos.y;
+			sphere_pos.z = character_pos.z;
 			sphereTimer += dt;
 		}
 
@@ -565,7 +637,7 @@ void WindowReshapeCallbackFunction(int w, int h)
 	// switch to projection because we're changing projection
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(90.0f, (float)w / h, 0.1f, 10000.0f);
+	gluPerspective(45.0f, (float)w / h, 0.1f, 10000.0f);
 	windowWidth = w;
 	windowHeight = h;
 	glViewport(0, 0, windowWidth, windowHeight);
