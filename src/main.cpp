@@ -1,4 +1,5 @@
 ﻿// Core Libraries
+
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -24,8 +25,8 @@
 #define FRAMES_PER_SECOND 60
 const int FRAME_DELAY = 1000 / FRAMES_PER_SECOND; // Miliseconds per frame
 
-int windowWidth = 800;
-int windowHeight = 600;
+int windowWidth = 1920;
+int windowHeight = 1080;
 
 float mousepositionX;
 float mousepositionY;
@@ -33,11 +34,18 @@ float mousepositionY;
 float lastMousepositionX;
 float lastMousepositionY;
 
+bool assignment = false;
+
+int score = 0;
+
 
 glm::vec3 position = glm::vec3(-9.6f, 28.7f, -75.0f);
 glm::vec3 character_pos = glm::vec3(0.0f, -0.35f, -40.6f);
 glm::vec3 character2_pos = glm::vec3(0.0f, -0.35f, 40.6f);
 glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+glm::vec3 bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
+
 // Initial horizontal angle : toward -Z
 float horizontalAngle = 3.14f;
 // Initial vertical angle : none
@@ -84,11 +92,16 @@ int sphereSpot;
 
 bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
-UINT uiVBO[4];
-UINT uiVAO[2];
+UINT uiVBO[6];
+UINT uiVAO[3];
 
 UINT uiVBO2[4];
 UINT uiVAO2[2];
+
+UINT scoreVAO[2];
+UINT scoreVBO[4];
+
+glm::vec3 score_position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 float rotation = 0;
 float dt;
@@ -98,6 +111,7 @@ UINT testing;
 CShader vertShader;
 CShader fragShader;
 vector<Loader> object;
+vector<Loader> UI;
 vector<glm::vec3> dimensions;
 // chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
@@ -109,6 +123,9 @@ CShader shVertex, shFragment;
 CShaderProgram spMain;
 
 float time = 0.0f;
+
+glm::vec3 up;
+glm::vec3 direction;
 
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
@@ -122,6 +139,10 @@ glm::mat4 getProjectionMatrix() {
 
 vector<GLuint> texture_handle;
 vector<GLuint> texture_sampler;
+
+vector<GLuint> texture_handler_score;
+vector<GLuint> texture_sampler_score;
+
 bool cameraLock = true;
 void makeMatricies()
 {
@@ -135,7 +156,7 @@ void makeMatricies()
 		horizontalAngle = 0.0599999987;
 		verticalAngle = -0.219999850;
 	}
-	glm::vec3 direction(
+	direction = glm::vec3(
 		cos(verticalAngle) * sin(horizontalAngle),
 		sin(verticalAngle),
 		cos(verticalAngle) * cos(horizontalAngle)
@@ -145,7 +166,7 @@ void makeMatricies()
 		0,
 		cos(horizontalAngle - 3.14f / 2.0f)
 	);
-	glm::vec3 up = glm::cross(right, direction);
+	up = glm::cross(right, direction);
 
 	if (keydown['w'])
 	{
@@ -181,6 +202,9 @@ void makeMatricies()
 void* ptr;
 void initScene()
 {
+	UI.push_back(Loader());
+	UI.push_back(Loader());
+
 	object.push_back(Loader());
 	object.push_back(Loader());
 	object[0].load("obj\\chest_closed.obj");
@@ -214,8 +238,8 @@ void initScene()
 	animation[0].load("obj\\simple_man_base.obj");
 	animation[1].load("obj\\simple_man_walk.obj");
 
-	glGenVertexArrays(2, uiVAO);
-	glGenBuffers(4, uiVBO);
+	glGenVertexArrays(3, uiVAO);
+	glGenBuffers(6, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
@@ -233,6 +257,21 @@ void initScene()
 	object[sphereSpot].load("obj\\bomb.obj");
 	object.push_back(Loader());
 	object[sphereSpot + 1].load("obj\\plane.obj");
+	object.push_back(Loader());
+	object[object.size() - 1].load("obj\\simple_man_base.obj");
+
+	glBindVertexArray(uiVAO[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+	glBufferData(GL_ARRAY_BUFFER, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[5]);
+	glBufferData(GL_ARRAY_BUFFER, object[1].getUV().size() * sizeof(glm::vec2), object[1].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
 	glGenVertexArrays(2, uiVAO2);
 	glGenBuffers(4, uiVBO2);
 
@@ -262,6 +301,7 @@ void initScene()
 
 	glBindVertexArray(uiVAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+
 	glBufferData(GL_ARRAY_BUFFER, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -271,6 +311,36 @@ void initScene()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
+
+	UI[0].load("obj\\score.obj");
+	UI[1].load("obj\\number.obj");
+
+	glGenVertexArrays(2, scoreVAO);
+	glGenBuffers(4, scoreVBO);
+
+	glBindVertexArray(scoreVAO[0]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, UI[0].getVertex().size() * sizeof(glm::vec3), UI[0].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, UI[0].getUV().size() * sizeof(glm::vec2), UI[0].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindVertexArray(scoreVAO[1]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, UI[1].getVertex().size() * sizeof(glm::vec3), UI[1].getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[3]);
+	glBufferData(GL_ARRAY_BUFFER, UI[1].getUV().size() * sizeof(glm::vec2), UI[1].getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	texture_handle.push_back(0);
 	texture_handle.push_back(0);
@@ -313,9 +383,37 @@ void initScene()
 		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
 		ilGetData()); /* Texture specification */
 
+	texture_handler_score.push_back(0);
+	texture_sampler_score.push_back(0);
+	texture_handler_score[0] = ilutGLLoadImage("img\\score.png");
+
+	glBindTexture(GL_TEXTURE_2D, texture_handler_score[0]);
+
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
+
+	char sTemp[] = "img\\num\\0.png";
+	for (int count = 1; count <= 10; count++)
+	{
+		sTemp[8] = count+47;
+		texture_handler_score.push_back(0);
+		texture_sampler_score.push_back(0);
+		texture_handler_score[count] = ilutGLLoadImage(sTemp);
+
+		glBindTexture(GL_TEXTURE_2D, texture_handler_score[count]);
+
+
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+			ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+			0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+			ilGetData()); /* Texture specification */
+	}
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
@@ -326,6 +424,8 @@ void initScene()
 
 	spMain.linkProgram();
 	spMain.useProgram();
+
+
 
 
 	//vertShader.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
@@ -353,11 +453,109 @@ void initScene()
 
 bool animate = false;
 bool dirForward = true;
+
+void test();
+void drawUI();
 void DisplayCallbackFunction(void)
 {
+	//glViewport(0, 0, windowWidth, windowHeight / 2);
+
+	glViewport(0, 0, windowWidth, windowHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
+	test();
+
+
+	glViewport(0, 0, windowWidth, windowHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
+	drawUI();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+
+	//glViewport(0, windowHeight / 2, windowWidth, windowHeight / 2);
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
+	////test();
+
+	//glViewport(0, windowHeight/2, windowWidth, windowHeight / 2);
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
+	//drawUI();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
+
+	glutSwapBuffers();
+
+}
+glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
+void drawUI()
+{
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	makeMatricies();
+	glm::mat4 ProjectionMatrix = getProjectionMatrix();
+	glm::mat4 ViewMatrix = getViewMatrix();
+	glm::mat4 identity = glm::mat4(1.0);
+
+	glm::mat4 mvp =  glm::mat4(
+		0.2f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.2f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.2f, 0.0f,
+		-0.6f, 0.6f, 0.0f, 1.0f);
+
+	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+	glUniform1i(sampler, 0);
+	glActiveTexture(GL_TEXTURE0);
 
 
 
+
+	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+	//glBindVertexArray(uiVAO[0]);
+	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	//glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
+
+	glBindTexture(GL_TEXTURE_2D, texture_handler_score[0]);
+	glBindVertexArray(scoreVAO[0]);
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, 0, UI[0].getVertex().size());
+
+	mvp = glm::mat4(
+		0.2f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.2f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.2f, 0.0f,
+		-0.1f, 0.6f, 0.0f, 1.0f);
+	if (score >= 10)
+	{
+		glBindTexture(GL_TEXTURE_2D, texture_handler_score[(score+1)%10]);
+		glBindVertexArray(scoreVAO[1]);
+		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+		glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
+	}
+	else
+	{
+	glBindTexture(GL_TEXTURE_2D, texture_handler_score[score + 1]);
+	glBindVertexArray(scoreVAO[1]);
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
+	}
+
+	glEnable(GL_DEPTH_TEST);
+}
+
+void test()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	if (animate == true)
 	{
 		if (time > 1)
@@ -387,10 +585,40 @@ void DisplayCallbackFunction(void)
 		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data());
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	//if (animate2 == true)
+	//{
+	//	if (time2 > 1)
+	//	{
+	//		time2 = 0;
+	//		lerpStage2 = !lerpStage2;
+	//	}
+	//	else if (time2 < 0)
+	//	{
+	//		time2 = 1;
+	//		lerpStage2 = !lerpStage2;
+	//	}
+	//	if (dirForward2 == true)
+	//		time2 += dt * (1 + playerSpeed);
+	//	else
+	//		time2 -= dt * (1 + playerSpeed);
+	//	//std::cout << time << std::endl;
+
+	//	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+	//	for (int count = 0; count < object[4].getVertex().size(); count++)
+	//	{
+	//		if (lerpStage == true)
+	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[0].getVertex()[count], animation[1].getVertex()[count], time);
+	//		else
+	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[1].getVertex()[count], animation[0].getVertex()[count], time);
+	//	}
+	//	glBufferSubData(GL_ARRAY_BUFFER, 0, object[4].getVertex().size() * sizeof(glm::vec3), object[4].getVertex().data());
+	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//}
 	//gravity
 	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
 	{
-		
+
 	}
 	else
 	{
@@ -402,7 +630,7 @@ void DisplayCallbackFunction(void)
 	glLoadIdentity();
 	rotation += 1;
 
-	/* clear the screen */
+	
 
 	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -429,7 +657,7 @@ void DisplayCallbackFunction(void)
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, -3.0f, 0.0f, 1.0f);;
+		0.0f, -3.0f, 0.0f, 1.0f);
 
 
 
@@ -451,7 +679,10 @@ void DisplayCallbackFunction(void)
 			sphere_pos.x, sphere_pos.y, sphere_pos.z, 1.0f);
 		//sphere.x++;
 		//sphere.y++;
-		sphere_pos.z++;
+		sphere_pos.z += bomb_acceleration.z;
+		sphere_pos.x += bomb_acceleration.x;
+		sphere_pos.y += bomb_acceleration.y;
+		bomb_acceleration.y -= 0.05;
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 		glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
 		if (sphereTimer > 1.5)
@@ -463,12 +694,20 @@ void DisplayCallbackFunction(void)
 		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[3]))//checks whether we hit the other person
 		{
 			std::cout << "score" << std::endl;
+			bomb = false;
+			sphereTimer = 0;
+			score++;
+		}
+		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[2]))
+		{
+			bomb = false;
+			sphereTimer = 0;
 		}
 	}
 
 
 	glBindVertexArray(uiVAO[0]);
-	
+
 	//glBindSampler(0, texture_sampler[0]);
 	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
 
@@ -486,12 +725,13 @@ void DisplayCallbackFunction(void)
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
+	glBindVertexArray(uiVAO[2]);
 	//character player 2
 	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		character2_pos.x, character2_pos.y, character2_pos.z, 1.0f );
+		character2_pos.x, character2_pos.y, character2_pos.z, 1.0f);
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
@@ -500,8 +740,7 @@ void DisplayCallbackFunction(void)
 
 
 
-	/* Swap Buffers to Make it show up on screen */
-	glutSwapBuffers();
+
 
 }
 
@@ -568,7 +807,32 @@ void TimerCallbackFunction(int value)
 	{
 		character_pos.z -= playerSpeed;
 	}
+	//fg ht ry
 
+	if (keydown['f'])
+	{
+		UI_pos.x -= playerSpeed;
+	}
+	if (keydown['h'])
+	{
+		UI_pos.x += playerSpeed;
+	}
+	if (keydown['t'])
+	{
+		UI_pos.y += playerSpeed;
+	}
+	if (keydown['g'])
+	{
+		UI_pos.y -= playerSpeed;
+	}
+	if (keydown['y'])
+	{
+		UI_pos.z += playerSpeed;
+	}
+	if (keydown['r'])
+	{
+		UI_pos.z -= playerSpeed;
+	}
 
 	if (character_pos.z > tempZ)
 	{
@@ -607,6 +871,7 @@ void TimerCallbackFunction(int value)
 	{
 		if (sphereTimer <= 0)
 		{
+			bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
 			bomb = true;
 			sphere_pos.x = character_pos.x;
 			sphere_pos.y = character_pos.y;
@@ -640,7 +905,7 @@ void WindowReshapeCallbackFunction(int w, int h)
 	gluPerspective(45.0f, (float)w / h, 0.1f, 10000.0f);
 	windowWidth = w;
 	windowHeight = h;
-	glViewport(0, 0, windowWidth, windowHeight);
+	//glViewport(0, 0, windowWidth, windowHeight);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
