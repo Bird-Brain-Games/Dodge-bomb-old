@@ -128,6 +128,7 @@ bool Loader::load(std::string fileName)
 }
 
 std::vector<glm::vec3>& Loader::getVertex() { return out_vertices; }
+
 std::vector<glm::vec2>& Loader::getUV() { return out_uvs; }
 std::vector<glm::vec3>& Loader::getNormal() { return out_normals; }
 std::vector<float>& Loader::getColor() { return color; }

@@ -17,6 +17,7 @@ class Loader
 public:
 	bool load(std::string);
 	std::vector<glm::vec3>& getVertex();
+	std::vector<glm::vec3>& getVertex(int);
 	std::vector<glm::vec2>& getUV();
 	std::vector<glm::vec3>& getNormal();
 	std::vector<float>& getColor();
