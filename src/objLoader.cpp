@@ -3,12 +3,22 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <vector>
-#include <gl\GL.h>
-#include <gl\GLU.h>
+#include <gl\glew.h>
 #include "objLoader.h"
-bool Loader::load(std::string fileName)
+
+Loader::Loader()
 {
-	FILE *file = fopen(fileName.c_str(), "r");//second parameter specifies what were doing with file ie read
+
+}
+
+Loader::Loader(char const* filePath)
+{
+	load(filePath);
+}
+
+bool Loader::load(char const* fileName)
+{
+	FILE *file = fopen(fileName, "r");//second parameter specifies what were doing with file ie read
 	if (file == NULL)
 	{
 		printf("you didn't open a file");
@@ -73,13 +83,6 @@ bool Loader::load(std::string fileName)
 			normalindiecies.push_back(normalIndex[0]);
 			normalindiecies.push_back(normalIndex[1]);
 			normalindiecies.push_back(normalIndex[2]);
-
-			//for (int count = 0; count < 3; count++)
-			//{
-			//data.insert(data.end(), (BYTE*)&temporary_vertices[vertexIndex[count] - 1], sizeof(glm::vec3) + (BYTE*)&temporary_vertices[vertexIndex[count] - 1]);
-			//data.insert(data.end(), (BYTE*)&temporary_uvs[UVindex[count] - 1], sizeof(glm::vec2) + (BYTE*)&temporary_vertices[UVindex[count] - 1]);
-			//data.insert(data.end(), (BYTE*)&temporary_normals[normalIndex[count] - 1], sizeof(glm::vec3) + (BYTE*)&temporary_vertices[normalIndex[count] - 1]);
-			//}
 		}
 
 	}
@@ -123,12 +126,33 @@ bool Loader::load(std::string fileName)
 		glm::vec3 normal = temporary_normals[normalIndex - 1];
 		out_normals.push_back(normal);
 	}
+
+	// Bind the data to the GLbuffer
+	bindObjectData(0);
 	return true;
 
 }
 
-std::vector<glm::vec3>& Loader::getVertex() { return out_vertices; }
+std::vector<glm::vec3> const& Loader::getVertex() const { return out_vertices; }
+std::vector<glm::vec2> const& Loader::getUV() const { return out_uvs; }
+std::vector<glm::vec3> const& Loader::getNormal() const { return out_normals; }
+std::vector<float> const& Loader::getColor() const { return color; }
 
-std::vector<glm::vec2>& Loader::getUV() { return out_uvs; }
-std::vector<glm::vec3>& Loader::getNormal() { return out_normals; }
-std::vector<float>& Loader::getColor() { return color; }
+void Loader::setVertex(int index, glm::vec3 newVertex)
+{
+	out_vertices.at(index) = newVertex;
+}
+
+void Loader::bindObjectData(int VAOindex)
+{
+	glBindVertexArray(uiVAO[VAOindex]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[VAOindex * 2]);
+	glBufferData(GL_ARRAY_BUFFER, getVertex().size() * sizeof(glm::vec3), getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[(VAOindex * 2) + 1]);
+	glBufferData(GL_ARRAY_BUFFER, getUV().size() * sizeof(glm::vec2), getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+}
