@@ -5,13 +5,16 @@
     <ClCompile Include="src\objLoader.cpp" />
     <ClCompile Include="src\ShaderLoader.cpp" />
     <ClCompile Include="src\shaders.cpp" />
-    <ClCompile Include="src\GameObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\objLoader.h" />
     <ClInclude Include="src\shaderLoader.h" />
     <ClInclude Include="src\shaders.h" />
+<<<<<<< local
+    <ClInclude Include="src\lerp.h" />
+    <ClInclude Include="src\Camera.h" />
+=======
     <ClInclude Include="src\math.h" />
-    <ClInclude Include="src\GameObject.h" />
+>>>>>>> other
   </ItemGroup>
 </Project>

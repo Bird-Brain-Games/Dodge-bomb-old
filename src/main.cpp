@@ -196,6 +196,30 @@ void makeMatricies()
 void* ptr;
 float scale = 1;
 
+/*
+Binds the object data to the stuff, i can't really remember exactly what it does
+but it allocates in memory for the object and stuff, so that's good.
+- VAO
+- index of VAO
+- VBO
+- object being bound
+*/
+
+void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), Loader const& obj)
+{
+	glBindVertexArray(VAO[VAOindex]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[VAOindex * 2]);
+	glBufferData(GL_ARRAY_BUFFER, obj.getVertex().size() * sizeof(glm::vec3), obj.getVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[(VAOindex * 2) + 1]);
+	glBufferData(GL_ARRAY_BUFFER, obj.getUV().size() * sizeof(glm::vec2), obj.getUV().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+}
+
+
 void initScene()
 {
 	UI.push_back(Loader());
@@ -463,7 +487,7 @@ void initScene()
 bool animate = false;
 bool dirForward = true;
 
-void test();
+void test() {};
 void drawUI();
 void DisplayCallbackFunction(void)
 {
@@ -557,7 +581,7 @@ void drawUI()
 		glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
 	}
 }
-
+/*
 void test()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -801,6 +825,7 @@ void test()
 
 
 }
+*/
 
 /* function void KeyboardCallbackFunction(unsigned char, int,int)
 * Description:
