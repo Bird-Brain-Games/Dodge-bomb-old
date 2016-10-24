@@ -5,6 +5,7 @@
 #include <vector>
 #include <gl\glew.h>
 #include "objLoader.h"
+#include <IL\ilut.h>
 
 Loader::Loader()
 {
@@ -143,16 +144,39 @@ void Loader::setVertex(int index, glm::vec3 newVertex)
 	out_vertices.at(index) = newVertex;
 }
 
-void Loader::bindObjectData(int VAOindex)
+void Loader::bindObjectData(GLuint DrawType)
 {
-	glBindVertexArray(uiVAO[VAOindex]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[VAOindex * 2]);
-	glBufferData(GL_ARRAY_BUFFER, getVertex().size() * sizeof(glm::vec3), getVertex().data(), GL_DYNAMIC_DRAW);
+	glGenVertexArrays(1, uiVAO);
+	glGenBuffers(3, uiVBO);
+
+	glBindVertexArray(uiVAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, getVertex().size() * sizeof(glm::vec3), getVertex().data(), DrawType);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[(VAOindex * 2) + 1]);
-	glBufferData(GL_ARRAY_BUFFER, getUV().size() * sizeof(glm::vec2), getUV().data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, getUV().size() * sizeof(glm::vec2), getUV().data(), DrawType);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, getNormal().size() * sizeof(glm::vec3), getNormal().data(), DrawType);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+}
+
+void Loader::bindTexture(char* filePath)
+{
+	glGenTextures(1, &texHandle[0]);
+	glGenSamplers(1, &texSampler[0]);
+
+	texHandle[0] = ilutGLLoadImage(filePath);
+	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
 }

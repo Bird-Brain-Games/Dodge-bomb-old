@@ -1,4 +1,6 @@
-﻿// Core Libraries
+﻿#pragma once
+
+// Core Libraries
 
 #include <iostream>
 #include <string>
@@ -86,14 +88,6 @@ int sphereSpot;
 
 bool lock = true; //locks the mouse to the center of the screen;
 float lastTime;
-UINT uiVBO[6];
-UINT uiVAO[3];
-
-UINT uiVBO2[4];
-UINT uiVAO2[2];
-
-UINT scoreVAO[2];
-UINT scoreVBO[4];
 
 glm::vec3 score_position = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -222,12 +216,11 @@ void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), 
 
 void initScene()
 {
-	UI.push_back(Loader());
-	UI.push_back(Loader());
+	UI.push_back(Loader("obj\\score.obj"));
+	UI.push_back(Loader("obj\\number.obj"));
 
-	object.push_back(Loader());
-	object.push_back(Loader());
-	object[0].load("obj\\bombpile.obj");
+	object.push_back(Loader("obj\\bombpile.obj"));
+	object.push_back(Loader("obj\\robot\\base.obj"));
 
 	dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
@@ -252,27 +245,11 @@ void initScene()
 	boundingBoxes.push_back(temp);
 
 
-	object[1].load("obj\\robot\\base.obj");
-	animation.push_back(Loader());
-	animation.push_back(Loader());
-	animation.push_back(Loader());
-	animation[0].load("obj\\robot\\walk_1.obj");
-	animation[1].load("obj\\robot\\walk_2.obj");
-	animation[2].load("obj\\robot\\base.obj");
+	animation.push_back(Loader("obj\\robot\\walk_1.obj"));
+	animation.push_back(Loader("obj\\robot\\walk_2.obj"));
+	animation.push_back(Loader("obj\\robot\\base.obj"));
 
-	glGenVertexArrays(3, uiVAO);
-	glGenBuffers(6, uiVBO);
-
-	glBindVertexArray(uiVAO[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, object[0].getVertex().size() * sizeof(glm::vec3), object[0].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, object[0].getUV().size() * sizeof(glm::vec2), object[0].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	object[0].bindObjectData(GL_DYNAMIC_DRAW);
 
 	sphereSpot = object.size();
 	object.push_back(Loader());
@@ -282,87 +259,13 @@ void initScene()
 	object.push_back(Loader());
 	object[object.size() - 1].load("obj\\robot\\base2.obj");
 
-	glBindVertexArray(uiVAO[2]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
-	glBufferData(GL_ARRAY_BUFFER, object[object.size()-1].getVertex().size() * sizeof(glm::vec3), object[object.size()-1].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	object[object.size() - 1].bindObjectData(GL_DYNAMIC_DRAW);
+	object[sphereSpot].bindObjectData(GL_DYNAMIC_DRAW);
+	object[sphereSpot + 1].bindObjectData(GL_DYNAMIC_DRAW);
+	object[1].bindObjectData(GL_DYNAMIC_DRAW);
 
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[5]);
-	glBufferData(GL_ARRAY_BUFFER, object[object.size()-1].getUV().size() * sizeof(glm::vec2), object[object.size()-1].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glGenVertexArrays(2, uiVAO2);
-	glGenBuffers(4, uiVBO2);
-
-
-	glBindVertexArray(uiVAO2[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[0]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getVertex().size() * sizeof(glm::vec3), object[sphereSpot].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[1]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot].getUV().size() * sizeof(glm::vec2), object[sphereSpot].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(uiVAO2[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[2]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot + 1].getVertex().size() * sizeof(glm::vec3), object[sphereSpot + 1].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO2[3]);
-	glBufferData(GL_ARRAY_BUFFER, object[sphereSpot + 1].getUV().size() * sizeof(glm::vec2), object[sphereSpot + 1].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-
-	glBindVertexArray(uiVAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-
-	glBufferData(GL_ARRAY_BUFFER, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, object[1].getUV().size() * sizeof(glm::vec2), object[1].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-
-	UI[0].load("obj\\score.obj");
-	UI[1].load("obj\\number.obj");
-
-	glGenVertexArrays(2, scoreVAO);
-	glGenBuffers(4, scoreVBO);
-
-	glBindVertexArray(scoreVAO[0]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, UI[0].getVertex().size() * sizeof(glm::vec3), UI[0].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, UI[0].getUV().size() * sizeof(glm::vec2), UI[0].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(scoreVAO[1]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, UI[1].getVertex().size() * sizeof(glm::vec3), UI[1].getVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, scoreVBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, UI[1].getUV().size() * sizeof(glm::vec2), UI[1].getUV().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	UI[0].bindObjectData(GL_DYNAMIC_DRAW);
+	UI[1].bindObjectData(GL_DYNAMIC_DRAW);
 
 	texture_handle.push_back(0);
 	texture_handle.push_back(0);
@@ -581,7 +484,7 @@ void drawUI()
 		glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
 	}
 }
-/*
+
 void test()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -825,7 +728,7 @@ void test()
 
 
 }
-*/
+
 
 /* function void KeyboardCallbackFunction(unsigned char, int,int)
 * Description:
