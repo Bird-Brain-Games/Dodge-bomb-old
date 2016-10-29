@@ -93,6 +93,8 @@ bool ShaderProgram::linkProgram()
 	glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
 	linked = linkStatus = GL_TRUE;
 
+	// TEMP
+	//return linked;
 }
 UINT ShaderProgram::getProgramID()
 {
