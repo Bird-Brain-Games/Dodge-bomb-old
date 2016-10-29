@@ -17,8 +17,8 @@
 
 #include "IL\ilut.h"
 //Project files
-#include "objLoader.h"
 #include "shaderLoader.h"
+#include "GameObject.h"
 #include "shaders.h"
 #include "math.h"
 
@@ -98,8 +98,8 @@ UINT testing;
 
 CShader vertShader;
 CShader fragShader;
-vector<Loader> object;
-vector<Loader> UI;
+vector<GameObject> object;
+vector<GameObject> UI;
 vector<glm::vec3> dimensions;
 // chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
@@ -216,11 +216,11 @@ void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), 
 
 void initScene()
 {
-	UI.push_back(Loader("obj\\score.obj"));
-	UI.push_back(Loader("obj\\number.obj"));
+	UI.push_back(GameObject("obj\\score.obj"));
+	UI.push_back(GameObject("obj\\number.obj"));
 
-	object.push_back(Loader("obj\\bombpile.obj"));
-	object.push_back(Loader("obj\\robot\\base.obj"));
+	object.push_back(GameObject("obj\\bombpile.obj"));
+	object.push_back(GameObject("obj\\robot\\base.obj"));
 
 	dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
@@ -249,90 +249,32 @@ void initScene()
 	animation.push_back(Loader("obj\\robot\\walk_2.obj"));
 	animation.push_back(Loader("obj\\robot\\base.obj"));
 
-	object[0].bindObjectData(GL_DYNAMIC_DRAW);
-
 	sphereSpot = object.size();
-	object.push_back(Loader());
-	object[sphereSpot].load("obj\\bomb.obj");
-	object.push_back(Loader());
-	object[sphereSpot + 1].load("obj\\table.obj");
-	object.push_back(Loader());
-	object[object.size() - 1].load("obj\\robot\\base2.obj");
+	object.push_back(GameObject());
+	object[sphereSpot].loadObject("obj\\bomb.obj");
+	object.push_back(GameObject());
+	object[sphereSpot + 1].loadObject("obj\\table.obj");
+	object.push_back(GameObject());
+	object[object.size() - 1].loadObject("obj\\robot\\base2.obj");
 
-	object[object.size() - 1].bindObjectData(GL_DYNAMIC_DRAW);
-	object[sphereSpot].bindObjectData(GL_DYNAMIC_DRAW);
-	object[sphereSpot + 1].bindObjectData(GL_DYNAMIC_DRAW);
-	object[1].bindObjectData(GL_DYNAMIC_DRAW);
+	object[0].bindObjectData();
+	object[1].bindObjectData();
+	object[object.size() - 1].bindObjectData();
+	object[sphereSpot].bindObjectData();
+	object[sphereSpot + 1].bindObjectData();
 
-	UI[0].bindObjectData(GL_DYNAMIC_DRAW);
-	UI[1].bindObjectData(GL_DYNAMIC_DRAW);
+	UI[0].bindObjectData();
+	UI[1].bindObjectData();
 
-	texture_handle.push_back(0);
-	texture_handle.push_back(0);
-	texture_handle.push_back(0);
-	texture_handle.push_back(0);
+	object[0].bindTexture("img\\bPileDiffuse.png");
+	object[1].bindTexture("img\\Bombot.jpg");
+	object[2].bindTexture("img\\table_temp.jpg");
+	object[3].bindTexture("img\\Bombot2.jpg");
 
-	texture_sampler.push_back(0);
-	texture_sampler.push_back(0);
-	texture_sampler.push_back(0);
-	texture_sampler.push_back(0);
-
-	glGenTextures(4, &texture_handle[0]);
-	glGenSamplers(4, &texture_sampler[0]);
-
-	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-
-	texture_handle[0] = ilutGLLoadImage("img\\bPileDiffuse.png");
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
-		ilGetData()); /* Texture specification */
-
-
-	texture_handle[1] = ilutGLLoadImage("img\\Bombot.jpg");
-	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
-
-
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
-		ilGetData()); /* Texture specification */
-
-	texture_handle[2] = ilutGLLoadImage("img\\table_temp.jpg");
-	glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
-
-
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
-		ilGetData()); /* Texture specification */
-
-
-	texture_handle[3] = ilutGLLoadImage("img\\Bombot2.jpg");
-	glBindTexture(GL_TEXTURE_2D, texture_handle[3]);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
-		ilGetData()); /* Texture specification */
-
-	texture_handler_score.push_back(0);
-	texture_sampler_score.push_back(0);
-	texture_handler_score[0] = ilutGLLoadImage("img\\score.png");
-
-	glBindTexture(GL_TEXTURE_2D, texture_handler_score[0]);
-
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
-		ilGetData()); /* Texture specification */
+	UI[0].bindTexture("img\\score.png");
 
 	char sTemp[] = "img\\num\\0.png";
-	for (int count = 1; count <= 10; count++)
+	for (int count = 0; count < 10; count++)
 	{
 		sTemp[8] = count + 47;
 		texture_handler_score.push_back(0);
@@ -348,8 +290,8 @@ void initScene()
 			ilGetData()); /* Texture specification */
 	}
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_SMOOTH);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_SMOOTH);
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
@@ -395,6 +337,7 @@ void drawUI();
 void DisplayCallbackFunction(void)
 {
 	//glViewport(0, 0, windowWidth, windowHeight / 2);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 	glViewport(0, 0, windowWidth, windowHeight);
 	glMatrixMode(GL_PROJECTION);
@@ -452,282 +395,275 @@ void drawUI()
 	glActiveTexture(GL_TEXTURE0);
 
 
+	UI[0].draw(iModelViewProjectionLoc, mvp);
 
-
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-	//glBindVertexArray(uiVAO[0]);
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
-
-	glBindTexture(GL_TEXTURE_2D, texture_handler_score[0]);
-	glBindVertexArray(scoreVAO[0]);
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, UI[0].getVertex().size());
 
 	mvp = glm::mat4(
 		0.2f, 0.0f, 0.0f, 0.0f,
 		0.0f, 0.2f, 0.0f, 0.0f,
 		0.0f, 0.0f, 0.2f, 0.0f,
 		-0.1f, 0.6f, 0.0f, 1.0f);
+
 	if (score >= 10)
 	{
 		glBindTexture(GL_TEXTURE_2D, texture_handler_score[(score + 1) % 10]);
-		glBindVertexArray(scoreVAO[1]);
+		glBindVertexArray(UI[1].getVAO()[1]);
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
+		glDrawArrays(GL_TRIANGLES, 0, UI[1].getLoader().getVertex().size());
 	}
 	else
 	{
 		glBindTexture(GL_TEXTURE_2D, texture_handler_score[score + 1]);
-		glBindVertexArray(scoreVAO[1]);
+		glBindVertexArray(UI[1].getVAO()[1]);
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getVertex().size());
+		glDrawArrays(GL_TRIANGLES, 0, UI[1].getLoader().getVertex().size());
 	}
 }
 
-void test()
-{
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	if (animate == true)
-	{
-		if (time > 1)
-		{
-			time = 0;
-			lerpStage++;
-			if (dirForward == false)
-				animate = false;
-		}
-		else if (time < 0)
-		{
-			time = 1;
-			lerpStage--;
-			if (dirForward == false)
-				animate = false;
-		}
-		if (lerpStage > 3)
-		{
-			lerpStage = 0;
-		}
-		else if (lerpStage < 0)
-		{
-			lerpStage = 3;
-		}
-		if (dirForward == true)
-			time += dt * (1 + playerSpeed);
-		else
-			time -= dt * (1 + playerSpeed);
-		//std::cout << time << std::endl;
-
-		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-
-		std::vector<glm::vec3>& obj = object[1].getVertex();
-		std::vector<glm::vec3>& ani1 = animation[0].getVertex();
-		std::vector<glm::vec3>& ani2 = animation[1].getVertex();
-		std::vector<glm::vec3>& ani3 = animation[2].getVertex();
-
-		if (dirForward == true)
-		{
-			if (lerpStage == 0)
-				lerp<std::vector<glm::vec3>>(ani3, ani1, obj, time);
-			else if (lerpStage == 1)
-				lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-			else if (lerpStage == 2)
-				lerp<std::vector<glm::vec3>>(ani3, ani2, obj, time);
-			else if (lerpStage == 3)
-				lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-		}
-		else
-		{
-			//if (lerpStage == 0)
-			//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-			//else if (lerpStage == 1)
-			//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-			//else if (lerpStage == 2)
-			//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-			//else if (lerpStage == 3)
-			//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-		}
-	
-		std::cout << lerpStage << std::endl;
-		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getVertex().size() * sizeof(glm::vec3), object[1].getVertex().data());
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-
-	//if (animate2 == true)
-	//{
-	//	if (time2 > 1)
-	//	{
-	//		time2 = 0;
-	//		lerpStage2 = !lerpStage2;
-	//	}
-	//	else if (time2 < 0)
-	//	{
-	//		time2 = 1;
-	//		lerpStage2 = !lerpStage2;
-	//	}
-	//	if (dirForward2 == true)
-	//		time2 += dt * (1 + playerSpeed);
-	//	else
-	//		time2 -= dt * (1 + playerSpeed);
-	//	//std::cout << time << std::endl;
-
-	//	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
-	//	for (int count = 0; count < object[4].getVertex().size(); count++)
-	//	{
-	//		if (lerpStage == true)
-	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[0].getVertex()[count], animation[1].getVertex()[count], time);
-	//		else
-	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[1].getVertex()[count], animation[0].getVertex()[count], time);
-	//	}
-	//	glBufferSubData(GL_ARRAY_BUFFER, 0, object[4].getVertex().size() * sizeof(glm::vec3), object[4].getVertex().data());
-	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//}
-	//gravity
-	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
-	{
-
-	}
-	else
-	{
-		character_pos.y -= 0.1;
-	}
-	//if (boundingBoxes[3])
-	//std::cout << object.getVertex()[0].x << std::endl;
-	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
-	glLoadIdentity();
-	rotation += 1;
-
-
-
-	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-	glUniform1i(sampler, 0);
-	glActiveTexture(GL_TEXTURE0);
-
-	makeMatricies();
-	glm::mat4 ProjectionMatrix = getProjectionMatrix();
-	glm::mat4 ViewMatrix = getViewMatrix();
-	glm::mat4 identity = glm::mat4(1.0);
-
-
-	//glm::mat4 ModelMatrix = glm::mat4{
-	//	1.0, 0.0f, 0.0f, 0.0f,
-	//	0.0f, cos(90), -sin(90), 0.0f,
-	//	0.0f, sin(90), cos(90), 0.0f,
-	//	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
-
-	glm::mat4  ModelMatrix = glm::mat4{
-	scale, 0.0f, 0.0f, 0.0f,
-	0.0f, scale, 0.0f, 0.0f,
-	0.0f, 0.0f, scale, 0.0f,
-	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
-
-	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, -3.0f, 0.0f, 1.0f);
-
-
-
-	glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
-	glBindVertexArray(uiVAO2[1]);
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
-
-	if (bomb == true && sphereTimer > 0)
-	{
-		glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-		glBindVertexArray(uiVAO2[0]);
-		sphereTimer += dt;
-
-		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			sphere_pos.x, sphere_pos.y, sphere_pos.z, 1.0f);
-
-		//sphere.x++;
-		//sphere.y++;
-		sphere_pos.z += bomb_acceleration.z;
-		sphere_pos.x += bomb_acceleration.x;
-		sphere_pos.y += bomb_acceleration.y;
-		bomb_acceleration.y -= 0.05;
-		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
-		if (sphereTimer > 1.5)
-		{
-			sphereTimer = 0;
-		}
-		boundingBoxes[4].max = sphere_pos + dimensions[3];
-		boundingBoxes[4].min = sphere_pos - dimensions[3];
-		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[3]))//checks whether we hit the other person
-		{
-			std::cout << "score" << std::endl;
-			bomb = false;
-			sphereTimer = 0;
-			score++;
-		}
-		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[2]))
-		{
-			bomb = false;
-			sphereTimer = 0;
-		}
-	}
-	if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))
-	{
-		x_bomb -= 0.3f;
-	}
-
-
-	glBindVertexArray(uiVAO[0]);
-	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, x_bomb, 0.0f, 1.0f);
-	//glBindSampler(0, texture_sampler[0]);
-	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-
-
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
-
-	glBindVertexArray(uiVAO[1]);
-
-	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
-
-	//character player 1
-	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
-
-	glBindVertexArray(uiVAO[2]);
-	//character player 2
-	glBindTexture(GL_TEXTURE_2D, texture_handle[3]);
-	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		character2_pos.x, character2_pos.y, character2_pos.z, 1.0f);
-	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
-
-	boundingBoxes[1].max = character_pos + dimensions[1];
-	boundingBoxes[1].min = character_pos - dimensions[1];
-
-
-
-
-
-}
+//void test()
+//{
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//	if (animate == true)
+//	{
+//		if (time > 1)
+//		{
+//			time = 0;
+//			lerpStage++;
+//			if (dirForward == false)
+//				animate = false;
+//		}
+//		else if (time < 0)
+//		{
+//			time = 1;
+//			lerpStage--;
+//			if (dirForward == false)
+//				animate = false;
+//		}
+//		if (lerpStage > 3)
+//		{
+//			lerpStage = 0;
+//		}
+//		else if (lerpStage < 0)
+//		{
+//			lerpStage = 3;
+//		}
+//		if (dirForward == true)
+//			time += dt * (1 + playerSpeed);
+//		else
+//			time -= dt * (1 + playerSpeed);
+//		//std::cout << time << std::endl;
+//
+//		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
+//
+//		std::vector<glm::vec3>& obj = object[1].getVertex();
+//		std::vector<glm::vec3>& ani1 = animation[0].getVertex();
+//		std::vector<glm::vec3>& ani2 = animation[1].getVertex();
+//		std::vector<glm::vec3>& ani3 = animation[2].getVertex();
+//
+//		if (dirForward == true)
+//		{
+//			if (lerpStage == 0)
+//				lerp<std::vector<glm::vec3>>(ani3, ani1, obj, time);
+//			else if (lerpStage == 1)
+//				lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
+//			else if (lerpStage == 2)
+//				lerp<std::vector<glm::vec3>>(ani3, ani2, obj, time);
+//			else if (lerpStage == 3)
+//				lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
+//		}
+//		else
+//		{
+//			//if (lerpStage == 0)
+//			//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
+//			//else if (lerpStage == 1)
+//			//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
+//			//else if (lerpStage == 2)
+//			//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
+//			//else if (lerpStage == 3)
+//			//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
+//		}
+//	
+//		std::cout << lerpStage << std::endl;
+//		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getLoader().getVertex().size() * 
+//			sizeof(glm::vec3), object[1].getLoader().getVertex().data());
+//		glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	}
+//
+//
+//	//if (animate2 == true)
+//	//{
+//	//	if (time2 > 1)
+//	//	{
+//	//		time2 = 0;
+//	//		lerpStage2 = !lerpStage2;
+//	//	}
+//	//	else if (time2 < 0)
+//	//	{
+//	//		time2 = 1;
+//	//		lerpStage2 = !lerpStage2;
+//	//	}
+//	//	if (dirForward2 == true)
+//	//		time2 += dt * (1 + playerSpeed);
+//	//	else
+//	//		time2 -= dt * (1 + playerSpeed);
+//	//	//std::cout << time << std::endl;
+//
+//	//	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+//	//	for (int count = 0; count < object[4].getVertex().size(); count++)
+//	//	{
+//	//		if (lerpStage == true)
+//	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[0].getVertex()[count], animation[1].getVertex()[count], time);
+//	//		else
+//	//			object[4].getVertex()[count] = lerp<glm::vec3>(animation[1].getVertex()[count], animation[0].getVertex()[count], time);
+//	//	}
+//	//	glBufferSubData(GL_ARRAY_BUFFER, 0, object[4].getVertex().size() * sizeof(glm::vec3), object[4].getVertex().data());
+//	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	//}
+//	//gravity
+//	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
+//	{
+//
+//	}
+//	else
+//	{
+//		character_pos.y -= 0.1;
+//	}
+//	//if (boundingBoxes[3])
+//	//std::cout << object.getVertex()[0].x << std::endl;
+//	//std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
+//	glLoadIdentity();
+//	rotation += 1;
+//
+//
+//
+//	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//
+//	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+//	int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+//	glUniform1i(sampler, 0);
+//	glActiveTexture(GL_TEXTURE0);
+//
+//	makeMatricies();
+//	glm::mat4 ProjectionMatrix = getProjectionMatrix();
+//	glm::mat4 ViewMatrix = getViewMatrix();
+//	glm::mat4 identity = glm::mat4(1.0);
+//
+//
+//	//glm::mat4 ModelMatrix = glm::mat4{
+//	//	1.0, 0.0f, 0.0f, 0.0f,
+//	//	0.0f, cos(90), -sin(90), 0.0f,
+//	//	0.0f, sin(90), cos(90), 0.0f,
+//	//	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+//
+//	glm::mat4  ModelMatrix = glm::mat4{
+//	scale, 0.0f, 0.0f, 0.0f,
+//	0.0f, scale, 0.0f, 0.0f,
+//	0.0f, 0.0f, scale, 0.0f,
+//	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+//
+//	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+//		1.0f, 0.0f, 0.0f, 0.0f,
+//		0.0f, 1.0f, 0.0f, 0.0f,
+//		0.0f, 0.0f, 1.0f, 0.0f,
+//		0.0f, -3.0f, 0.0f, 1.0f);
+//
+//
+//
+//	glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
+//	glBindVertexArray(uiVAO2[1]);
+//	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+//	glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
+//
+//	if (bomb == true && sphereTimer > 0)
+//	{
+//		glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+//		glBindVertexArray(uiVAO2[0]);
+//		sphereTimer += dt;
+//
+//		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+//			1.0f, 0.0f, 0.0f, 0.0f,
+//			0.0f, 1.0f, 0.0f, 0.0f,
+//			0.0f, 0.0f, 1.0f, 0.0f,
+//			sphere_pos.x, sphere_pos.y, sphere_pos.z, 1.0f);
+//
+//		//sphere.x++;
+//		//sphere.y++;
+//		sphere_pos.z += bomb_acceleration.z;
+//		sphere_pos.x += bomb_acceleration.x;
+//		sphere_pos.y += bomb_acceleration.y;
+//		bomb_acceleration.y -= 0.05;
+//		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+//		glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
+//		if (sphereTimer > 1.5)
+//		{
+//			sphereTimer = 0;
+//		}
+//		boundingBoxes[4].max = sphere_pos + dimensions[3];
+//		boundingBoxes[4].min = sphere_pos - dimensions[3];
+//		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[3]))//checks whether we hit the other person
+//		{
+//			std::cout << "score" << std::endl;
+//			bomb = false;
+//			sphereTimer = 0;
+//			score++;
+//		}
+//		if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[2]))
+//		{
+//			bomb = false;
+//			sphereTimer = 0;
+//		}
+//	}
+//	if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))
+//	{
+//		x_bomb -= 0.3f;
+//	}
+//
+//
+//	glBindVertexArray(uiVAO[0]);
+//	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+//		1.0f, 0.0f, 0.0f, 0.0f,
+//		0.0f, 1.0f, 0.0f, 0.0f,
+//		0.0f, 0.0f, 1.0f, 0.0f,
+//		0.0f, x_bomb, 0.0f, 1.0f);
+//	//glBindSampler(0, texture_sampler[0]);
+//	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+//
+//
+//	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+//	glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
+//
+//	glBindVertexArray(uiVAO[1]);
+//
+//	glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+//
+//	//character player 1
+//	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+//
+//	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+//	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
+//
+//	glBindVertexArray(uiVAO[2]);
+//	//character player 2
+//	glBindTexture(GL_TEXTURE_2D, texture_handle[3]);
+//	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+//		1.0f, 0.0f, 0.0f, 0.0f,
+//		0.0f, 1.0f, 0.0f, 0.0f,
+//		0.0f, 0.0f, 1.0f, 0.0f,
+//		character2_pos.x, character2_pos.y, character2_pos.z, 1.0f);
+//	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+//	glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
+//
+//	boundingBoxes[1].max = character_pos + dimensions[1];
+//	boundingBoxes[1].min = character_pos - dimensions[1];
+//
+//
+//
+//
+//
+//}
 
 
 /* function void KeyboardCallbackFunction(unsigned char, int,int)
