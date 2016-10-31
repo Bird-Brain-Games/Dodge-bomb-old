@@ -195,8 +195,13 @@ void Animation::update(float deltaTime, Loader & base)
 		}
 	}
 
-	base.setVertices(lerp<std::vector<glm::vec3>>(
+	base.setVertices
+	(
+		lerp<glm::vec3>
+		(
 		poseList.at(currentPose).getVertices(), 
-		poseList.at(currentPose).getVertices(),
-		time));
+		poseList.at(nextPose).getVertices(),
+		time	
+		)
+	);
 }
