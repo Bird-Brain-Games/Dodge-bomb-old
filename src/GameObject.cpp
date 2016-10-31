@@ -4,12 +4,13 @@
 
 GameObject::GameObject()
 {
-	
+	textureUnit = 0;
 }
 
 GameObject::GameObject(char const* filePath)
 {
 	loadObject(filePath);
+	textureUnit = 0;
 }
 
 void GameObject::loadObject(char const* filePath)
@@ -25,6 +26,7 @@ void GameObject::update(float deltaTime)
 void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 {
 	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(uiVAO[0]);
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, obj.getVertex().size());
@@ -35,7 +37,7 @@ void GameObject::bindObjectData(GLuint DrawType)
 	glGenVertexArrays(1, uiVAO);
 	glGenBuffers(3, uiVBO);
 
-	glBindVertexArray(uiVAO[1]);
+	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, obj.getVertex().size() * sizeof(glm::vec3), obj.getVertex().data(), DrawType);
 	glEnableVertexAttribArray(0);
@@ -57,6 +59,9 @@ void GameObject::bindTexture(char* filePath)
 {
 	glGenTextures(1, &texHandle[0]);
 	glGenSamplers(1, &texSampler[0]);
+
+	textureUnit = GL_TEXTURE0 + textureStart;
+	textureStart++;
 
 	texHandle[0] = ilutGLLoadImage(filePath);
 	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
