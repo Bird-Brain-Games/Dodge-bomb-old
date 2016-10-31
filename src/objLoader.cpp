@@ -5,6 +5,7 @@
 #include <vector>
 #include <gl\glew.h>
 #include "objLoader.h"
+#include "math.h"
 
 Loader::Loader()
 {
@@ -131,12 +132,71 @@ bool Loader::load(char const* fileName)
 
 }
 
-std::vector<glm::vec3> const& Loader::getVertex() const { return out_vertices; }
-std::vector<glm::vec2> const& Loader::getUV() const { return out_uvs; }
-std::vector<glm::vec3> const& Loader::getNormal() const { return out_normals; }
-std::vector<float> const& Loader::getColor() const { return color; }
+std::vector<glm::vec3> const& Loader::getVertices() const { return out_vertices; }
+std::vector<glm::vec2> const& Loader::getUVs() const { return out_uvs; }
+std::vector<glm::vec3> const& Loader::getNormals() const { return out_normals; }
+std::vector<float> const& Loader::getColors() const { return color; }
 
-void Loader::setVertex(int index, glm::vec3 newVertex)
+void Loader::setVertex(int index, glm::vec3 const& newVertex)
 {
 	out_vertices.at(index) = newVertex;
+}
+
+void Loader::setVertices(std::vector<glm::vec3> const& newVertices)
+{
+	out_vertices = newVertices;
+	/*for (int i = 0; i < getVertices().size(); i++)
+	{
+		setVertex(i, newVertices.at(i));
+	}*/
+}
+
+
+
+Animation::Animation()
+{
+	poseList.push_back(Loader());
+	reset();
+}
+
+Animation::Animation(const char* filePath)
+{
+	// TBD
+}
+
+Animation::Animation(std::vector<Loader> const& _poseList)
+{
+	for (int i = 0; i < _poseList.size(); i++)
+	{
+		poseList.push_back(_poseList.at(i));
+	}
+	reset();
+}
+
+void Animation::reset()
+{
+	time = 0.0f;
+	currentPose = 0;
+	nextPose = 0;
+}
+
+void Animation::update(float deltaTime, Loader & base)
+{
+	// Update the time (currently all pose transitions last 1s.)
+	time += deltaTime;
+	if (time > 1.0f)
+	{
+		time = 0.0f;
+		currentPose = nextPose;
+		nextPose++;
+		if (nextPose >= poseList.size())
+		{
+			nextPose = 0;
+		}
+	}
+
+	base.setVertices(lerp<std::vector<glm::vec3>>(
+		poseList.at(currentPose).getVertices(), 
+		poseList.at(currentPose).getVertices(),
+		time));
 }

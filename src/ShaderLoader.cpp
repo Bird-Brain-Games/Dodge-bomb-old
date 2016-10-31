@@ -94,7 +94,7 @@ bool ShaderProgram::linkProgram()
 	linked = linkStatus = GL_TRUE;
 
 	// TEMP
-	//return linked;
+	return linked;
 }
 UINT ShaderProgram::getProgramID()
 {

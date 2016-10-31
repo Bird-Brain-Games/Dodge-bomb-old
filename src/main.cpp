@@ -203,12 +203,12 @@ void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), 
 {
 	glBindVertexArray(VAO[VAOindex]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[VAOindex * 2]);
-	glBufferData(GL_ARRAY_BUFFER, obj.getVertex().size() * sizeof(glm::vec3), obj.getVertex().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj.getVertices().size() * sizeof(glm::vec3), obj.getVertices().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[(VAOindex * 2) + 1]);
-	glBufferData(GL_ARRAY_BUFFER, obj.getUV().size() * sizeof(glm::vec2), obj.getUV().data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj.getUVs().size() * sizeof(glm::vec2), obj.getUVs().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 }
@@ -251,11 +251,11 @@ void initScene()
 
 	sphereSpot = object.size();
 	object.push_back(GameObject());
-	object[sphereSpot].loadObject("obj\\bomb.obj");
+	object[sphereSpot].loadBaseObject("obj\\bomb.obj");
 	object.push_back(GameObject());
-	object[sphereSpot + 1].loadObject("obj\\table.obj");
+	object[sphereSpot + 1].loadBaseObject("obj\\table.obj");
 	object.push_back(GameObject());
-	object[object.size() - 1].loadObject("obj\\robot\\base2.obj");
+	object[object.size() - 1].loadBaseObject("obj\\robot\\base2.obj");
 
 	object[0].bindObjectData();
 	object[1].bindObjectData();
@@ -409,14 +409,14 @@ void drawUI()
 		glBindTexture(GL_TEXTURE_2D, texture_handler_score[(score + 1) % 10]);
 		glBindVertexArray(UI[1].getVAO()[1]);
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getLoader().getVertex().size());
+		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
 	}
 	else
 	{
 		glBindTexture(GL_TEXTURE_2D, texture_handler_score[score + 1]);
 		glBindVertexArray(UI[1].getVAO()[1]);
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getLoader().getVertex().size());
+		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
 	}
 }
 
@@ -456,7 +456,7 @@ void drawUI()
 //
 //		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
 //
-//		std::vector<glm::vec3>& obj = object[1].getVertex();
+//		std::vector<glm::vec3>& obj = object[1].getBaseLoader().getVertex();
 //		std::vector<glm::vec3>& ani1 = animation[0].getVertex();
 //		std::vector<glm::vec3>& ani2 = animation[1].getVertex();
 //		std::vector<glm::vec3>& ani3 = animation[2].getVertex();
@@ -485,8 +485,8 @@ void drawUI()
 //		}
 //	
 //		std::cout << lerpStage << std::endl;
-//		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getLoader().getVertex().size() * 
-//			sizeof(glm::vec3), object[1].getLoader().getVertex().data());
+//		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getBaseLoader().getVertex().size() * 
+//			sizeof(glm::vec3), object[1].getBaseLoader().getVertex().data());
 //		glBindBuffer(GL_ARRAY_BUFFER, 0);
 //	}
 //
