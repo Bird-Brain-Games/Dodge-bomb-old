@@ -253,9 +253,9 @@ void initScene()
 	object.push_back(GameObject());
 	object.push_back(GameObject());
 
-	object[sphereSpot].loadObject("obj\\bomb.obj");
-	object[sphereSpot + 1].loadObject("obj\\table.obj");
-	object[object.size() - 1].loadObject("obj\\robot\\base2.obj");
+	object[sphereSpot].loadBaseObject("obj\\bomb.obj");
+	object[sphereSpot + 1].loadBaseObject("obj\\table.obj");
+	object[object.size() - 1].loadBaseObject("obj\\robot\\base2.obj");
 
 	object[0].bindObjectData();
 	object[1].bindObjectData();
