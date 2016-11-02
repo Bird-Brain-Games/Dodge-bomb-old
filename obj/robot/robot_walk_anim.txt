@@ -1,0 +1,3 @@
+obj\\robot\\walk_1.obj
+obj\\robot\\walk_2.obj
+obj\\robot\\base.obj

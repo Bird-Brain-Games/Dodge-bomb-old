@@ -34,6 +34,7 @@ private:
 };
 
 // Animation class used to control flow of objects and speed
+// Holds a list of poses that can be morphed between
 class Animation
 {
 public:
@@ -41,8 +42,15 @@ public:
 	Animation(const char* filePath);
 	Animation(std::vector<Loader> const&);
 	
+	// Updates the given base loader based on the current animation
 	void update(float deltaTime, Loader & base);
+
+	// Resets the values to the original ones
 	void reset();
+
+private:
+	void addPose(Loader const&);
+	void addPose(const char* filePath);
 
 private:
 	std::vector<Loader> poseList;

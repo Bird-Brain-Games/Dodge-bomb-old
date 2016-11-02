@@ -13,3 +13,4 @@ syntax: glob
 *.log
 */debug
 */release
+*/build/
