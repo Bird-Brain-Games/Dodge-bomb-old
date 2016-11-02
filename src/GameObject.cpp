@@ -16,6 +16,14 @@ GameObject::GameObject(char const* filePath)
 	textureUnit = 0;
 }
 
+GameObject::GameObject(char const* filePath, char * texData)
+{
+	loadBaseObject(filePath);
+	bindTexture(texData);
+	isEnvironment = false;
+	textureUnit = 0;
+}
+
 void GameObject::loadBaseObject(char const* filePath)
 {
 	obj = Loader(filePath);
@@ -79,23 +87,41 @@ void GameObject::bindTexture(char* filePath)
 AnimatedObject::AnimatedObject()
 	: GameObject()
 {
-
+	currentAnim = 0;
+	addAnim(Animation());
 }
 
-AnimatedObject::AnimatedObject(const char* filePath)
-	: GameObject(filePath)
+AnimatedObject::AnimatedObject(const char* basePosePath)
+	: GameObject(basePosePath)
 {
+	currentAnim = 0;
+	setBaseAnim(basePosePath);
+}
 
+AnimatedObject::AnimatedObject(char const* basePosePath, char * texData)
+	: GameObject(basePosePath, texData)
+{
+	currentAnim = 0;
+	setBaseAnim(basePosePath);
+}
+
+void AnimatedObject::setBaseAnim(char const* basePosePath)
+{
+	// Set the base pose as the default animation
+	std::vector<Loader> tempAnimation;
+	tempAnimation.push_back(Loader(basePosePath));
+	addAnim(Animation(tempAnimation));
 }
 
 void AnimatedObject::addAnim(Animation const& newAnim)
 {
+	currentAnim = 0;
 	animations.push_back(newAnim);
 }
 
 void AnimatedObject::addAnim(const char* filePath)
 {
-	animations.push_back(Animation(filePath));
+	addAnim(Animation(filePath));
 }
 
 Animation const& AnimatedObject::getAnim(int pose) const
@@ -116,9 +142,15 @@ void AnimatedObject::update(float deltaTime)
 {
 	GameObject::update(deltaTime);
 	animations.at(currentAnim).update(deltaTime, getBaseLoader());
+	GameObject::bindObjectData(GL_DYNAMIC_DRAW);
 }
 
 void AnimatedObject::setCurrentAnim(int newAnimIndex)
 {
+	if (newAnimIndex >= animations.size())
+	{
+		throw std::out_of_range("Error: given index out of range in AnimatedObject.");
+	}
 
+	currentAnim = newAnimIndex;
 }

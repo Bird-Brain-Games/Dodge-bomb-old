@@ -103,7 +103,7 @@ vector<GameObject> UI;
 vector<glm::vec3> dimensions;
 // chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
-vector<Loader> animation;
+AnimatedObject animation;
 
 Collision aabb;
 
@@ -199,27 +199,11 @@ but it allocates in memory for the object and stuff, so that's good.
 - object being bound
 */
 
-void bindObjectData(UINT* const (&VAO), int const VAOindex, UINT* const (&VBO), Loader const& obj)
-{
-	glBindVertexArray(VAO[VAOindex]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[VAOindex * 2]);
-	glBufferData(GL_ARRAY_BUFFER, obj.getVertices().size() * sizeof(glm::vec3), obj.getVertices().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[(VAOindex * 2) + 1]);
-	glBufferData(GL_ARRAY_BUFFER, obj.getUVs().size() * sizeof(glm::vec2), obj.getUVs().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-}
-
 
 void initScene()
 {
-	UI.push_back(GameObject("obj\\score.obj"));
+	UI.push_back(GameObject("obj\\score.obj", "img\\score.png"));
 	UI.push_back(GameObject("obj\\number.obj"));
-
-	object.push_back(GameObject("obj\\robot\\base.obj"));
 
 	dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
@@ -243,35 +227,25 @@ void initScene()
 	temp.min = sphere_pos - dimensions[3];
 	boundingBoxes.push_back(temp);
 
+	animation = AnimatedObject("obj\\robot\\base.obj", "img\\Bombot.jpg");
+	animation.addAnim("obj\\robot\\robot_walk_anim.txt");
+	animation.setCurrentAnim(1);
 
-	animation.push_back(Loader("obj\\robot\\walk_1.obj"));
-	animation.push_back(Loader("obj\\robot\\walk_2.obj"));
-	animation.push_back(Loader("obj\\robot\\base.obj"));
-
+	object.push_back(GameObject("obj\\robot\\base.obj", "img\\Bombot.jpg"));
 	sphereSpot = object.size();
-	object.push_back(GameObject());
-	object.push_back(GameObject());
-	object.push_back(GameObject());
-
-	object[sphereSpot].loadBaseObject("obj\\bomb.obj");
-	object[sphereSpot + 1].loadBaseObject("obj\\table.obj");
-	object[object.size() - 1].loadBaseObject("obj\\robot\\base2.obj");
+	object.push_back(GameObject("obj\\bomb.obj", "img\\bPileDiffuse.png"));
+	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg"));
+	object.push_back(GameObject("obj\\robot\\base2.obj", "img\\Bombot2.jpg"));
 
 	object[0].bindObjectData();
 	object[1].bindObjectData();
-	object[object.size() - 1].bindObjectData();
-	object[sphereSpot].bindObjectData();
-	object[sphereSpot + 1].bindObjectData();
+	object[2].bindObjectData();
+	object[3].bindObjectData();
+
+	animation.bindObjectData();
 
 	UI[0].bindObjectData();
 	UI[1].bindObjectData();
-
-	object[0].bindTexture("img\\Bombot.jpg");
-	object[1].bindTexture("img\\bPileDiffuse.png");
-	object[2].bindTexture("img\\table_temp.jpg");
-	object[3].bindTexture("img\\Bombot2.jpg");
-
-	UI[0].bindTexture("img\\score.png");
 
 	char sTemp[] = "img\\num\\0.png";
 	for (int count = 0; count < 10; count++)
@@ -352,7 +326,7 @@ void DisplayCallbackFunction(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
-	drawUI();
+	//drawUI();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -377,7 +351,7 @@ void DisplayCallbackFunction(void)
 glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
 void drawUI()
 {
-	/*glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
 	makeMatricies();
@@ -419,7 +393,7 @@ void drawUI()
 		glBindVertexArray(UI[1].getVAO()[1]);
 		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
-	}*/
+	}
 }
 
 void test()
@@ -428,102 +402,7 @@ void test()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	//if (animate == true)
-	//{
-	//	if (time > 1)
-	//	{
-	//		time = 0;
-	//		lerpStage++;
-	//		if (dirForward == false)
-	//			animate = false;
-	//	}
-	//	else if (time < 0)
-	//	{
-	//		time = 1;
-	//		lerpStage--;
-	//		if (dirForward == false)
-	//			animate = false;
-	//	}
-	//	if (lerpStage > 3)
-	//	{
-	//		lerpStage = 0;
-	//	}
-	//	else if (lerpStage < 0)
-	//	{
-	//		lerpStage = 3;
-	//	}
-	//	if (dirForward == true)
-	//		time += dt * (1 + playerSpeed);
-	//	else
-	//		time -= dt * (1 + playerSpeed);
-	//	//std::cout << time << std::endl;
 
-	//	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[2]);
-
-//		std::vector<glm::vec3>& obj = object[1].getBaseLoader().getVertex();
-	//	std::vector<glm::vec3>& ani1 = animation[0].getVertex();
-	//	std::vector<glm::vec3>& ani2 = animation[1].getVertex();
-	//	std::vector<glm::vec3>& ani3 = animation[2].getVertex();
-
-	//	if (dirForward == true)
-	//	{
-	//		if (lerpStage == 0)
-	//			lerp<std::vector<glm::vec3>>(ani3, ani1, obj, time);
-	//		else if (lerpStage == 1)
-	//			lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-	//		else if (lerpStage == 2)
-	//			lerp<std::vector<glm::vec3>>(ani3, ani2, obj, time);
-	//		else if (lerpStage == 3)
-	//			lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-	//	}
-	//	else
-	//	{
-	//		//if (lerpStage == 0)
-	//		//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-	//		//else if (lerpStage == 1)
-	//		//	lerp<std::vector<glm::vec3>>(ani1, ani3, obj, time);
-	//		//else if (lerpStage == 2)
-	//		//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-	//		//else if (lerpStage == 3)
-	//		//	lerp<std::vector<glm::vec3>>(ani2, ani3, obj, time);
-	//	}
-	//
-	//	std::cout << lerpStage << std::endl;
-//		glBufferSubData(GL_ARRAY_BUFFER, 0, object[1].getBaseLoader().getVertex().size() * 
-//			sizeof(glm::vec3), object[1].getBaseLoader().getVertex().data());
-	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//}
-
-
-	////if (animate2 == true)
-	////{
-	////	if (time2 > 1)
-	////	{
-	////		time2 = 0;
-	////		lerpStage2 = !lerpStage2;
-	////	}
-	////	else if (time2 < 0)
-	////	{
-	////		time2 = 1;
-	////		lerpStage2 = !lerpStage2;
-	////	}
-	////	if (dirForward2 == true)
-	////		time2 += dt * (1 + playerSpeed);
-	////	else
-	////		time2 -= dt * (1 + playerSpeed);
-	////	//std::cout << time << std::endl;
-
-	////	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
-	////	for (int count = 0; count < object[4].getVertex().size(); count++)
-	////	{
-	////		if (lerpStage == true)
-	////			object[4].getVertex()[count] = lerp<glm::vec3>(animation[0].getVertex()[count], animation[1].getVertex()[count], time);
-	////		else
-	////			object[4].getVertex()[count] = lerp<glm::vec3>(animation[1].getVertex()[count], animation[0].getVertex()[count], time);
-	////	}
-	////	glBufferSubData(GL_ARRAY_BUFFER, 0, object[4].getVertex().size() * sizeof(glm::vec3), object[4].getVertex().data());
-	////	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	////}
 	////gravity
 	//if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
 	//{
@@ -559,9 +438,10 @@ void test()
 
 	for (int i = 0; i < object.size(); i++)
 	{
-	object[i].draw(iModelViewProjectionLoc, mvp);
+		//object[i].draw(iModelViewProjectionLoc, mvp);
 	}
-	//object[0].draw(iModelViewProjectionLoc, mvp);
+	
+	animation.draw(iModelViewProjectionLoc, mvp);
 
 	////glm::mat4 ModelMatrix = glm::mat4{
 	////	1.0, 0.0f, 0.0f, 0.0f,
@@ -698,21 +578,9 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 	keydown[key] = false;
 }
 
-/* function TimerCallbackFunction(int value)
-* Description:
-*  - this is called many times per second
-*  - this enables you to animate things
-*  - no drawing, just changing the state
-*  - changes the frame number and calls for a redisplay
-*  - FRAME_DELAY is the number of milliseconds to wait before calling the timer again
-*/
-
-void TimerCallbackFunction(int value)
+void processInputs()
 {
-	/* this call makes it actually show up on screen */
-	glutPostRedisplay();
-	/* this call gives it a proper frame delay to hit our target FPS */
-	float tempX, tempY, tempZ;									
+	float tempX, tempY, tempZ;
 	tempX = character_pos.x;
 	tempY = character_pos.y;
 	tempZ = character_pos.z;
@@ -814,6 +682,25 @@ void TimerCallbackFunction(int value)
 		}
 
 	}
+}
+
+/* function TimerCallbackFunction(int value)
+* Description:
+*  - this is called many times per second
+*  - this enables you to animate things
+*  - no drawing, just changing the state
+*  - changes the frame number and calls for a redisplay
+*  - FRAME_DELAY is the number of milliseconds to wait before calling the timer again
+*/
+
+void TimerCallbackFunction(int value)
+{
+	/* this call makes it actually show up on screen */
+	glutPostRedisplay();
+	/* this call gives it a proper frame delay to hit our target FPS */
+	
+	// Process all inputs
+	processInputs();
 
 	static int elapsedTimeAtLastTick = 0;
 	int totalElapsedTime = glutGet(GLUT_ELAPSED_TIME);
@@ -821,6 +708,13 @@ void TimerCallbackFunction(int value)
 	dt = totalElapsedTime - elapsedTimeAtLastTick;
 	dt /= 1000.0f;
 	elapsedTimeAtLastTick = totalElapsedTime;
+
+	// Update game objects
+	for (GameObject & o : object)
+	{
+		o.update(dt);
+	}
+	animation.update(dt);
 
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }

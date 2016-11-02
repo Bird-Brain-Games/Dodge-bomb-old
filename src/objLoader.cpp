@@ -1,11 +1,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <stdio.h>
 #include <vector>
 #include <gl\glew.h>
 #include "objLoader.h"
-#include "math.h"
 
 Loader::Loader()
 {
@@ -155,22 +157,47 @@ void Loader::setVertices(std::vector<glm::vec3> const& newVertices)
 
 Animation::Animation()
 {
-	poseList.push_back(Loader());
+	addPose(Loader());
 	reset();
 }
 
 Animation::Animation(const char* filePath)
 {
-	// TBD
+	std::ifstream inFile(filePath);
+	if (!inFile)
+	{
+		std::cerr << "Error reading file: " << filePath << std::endl;
+		throw (-1);
+	}
+
+	std::string line;
+	while (std::getline(inFile, line))
+	{
+		addPose(line.c_str());
+	}
+
+
+	inFile.close();
+	reset();
 }
 
 Animation::Animation(std::vector<Loader> const& _poseList)
 {
 	for (int i = 0; i < _poseList.size(); i++)
 	{
-		poseList.push_back(_poseList.at(i));
+		addPose(_poseList.at(i));
 	}
 	reset();
+}
+
+void Animation::addPose(const char* filePath)
+{
+	poseList.push_back(Loader(filePath));
+}
+
+void Animation::addPose(Loader const& loader)
+{
+	poseList.push_back(loader);
 }
 
 void Animation::reset()
@@ -180,10 +207,24 @@ void Animation::reset()
 	nextPose = 0;
 }
 
+template <typename T>
+std::vector<T> vectorLerp(std::vector<T> const& p0, std::vector<T> const& p1, float t)
+{
+	std::vector<T> output;
+
+	for (int count = 0; count < p0.size(); count++)
+	{
+		output.push_back((1.0f - t) * p0[count] + p1[count] * t);
+	}
+
+	return output;
+}
+
 void Animation::update(float deltaTime, Loader & base)
 {
 	// Update the time (currently all pose transitions last 1s.)
 	time += deltaTime;
+
 	if (time > 1.0f)
 	{
 		time = 0.0f;
@@ -195,13 +236,16 @@ void Animation::update(float deltaTime, Loader & base)
 		}
 	}
 
+	std::vector<glm::vec3> newVertices =
+		vectorLerp<glm::vec3>
+		(
+			poseList.at(currentPose).getVertices(),
+			poseList.at(nextPose).getVertices(),
+			time
+		);
+
 	base.setVertices
 	(
-		lerp<glm::vec3>
-		(
-		poseList.at(currentPose).getVertices(), 
-		poseList.at(nextPose).getVertices(),
-		time	
-		)
+		newVertices
 	);
 }

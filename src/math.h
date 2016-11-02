@@ -6,18 +6,8 @@ struct boundingBox
 	glm::vec3 min;
 };
 
-template <typename T>
-std::vector<T> lerp(std::vector<T> const& p0, std::vector<T> const& p1, float t)
-{
-	std::vector<T> output;
 
-	for (int count = 0; count < p0.size(); count++)
-	{
-		output.push_back((1.0f - t) * p0[count] + p1[count] * t);
-	}
 
-	return output;
-}
 
 template <typename T>
 T lerp(T &p0, T &p1, float t)

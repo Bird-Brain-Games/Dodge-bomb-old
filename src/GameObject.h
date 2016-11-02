@@ -12,6 +12,7 @@ class GameObject
 public:
 	GameObject();
 	GameObject(char const* filePath);
+	GameObject(char const* filePath, char * texData);
 
 	void loadBaseObject(char const* filePath);
 
@@ -19,7 +20,7 @@ public:
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
-	void bindTexture(char* filePath);
+	void bindTexture(char * filePath);
 
 	Loader & getBaseLoader() { return obj; }
 	GLuint const* getVAO() { return uiVAO; }	// To be removed probably
@@ -46,7 +47,8 @@ class AnimatedObject : public GameObject
 {
 public:
 	AnimatedObject();
-	AnimatedObject(char const* filePath);
+	AnimatedObject(char const* basePosePath);
+	AnimatedObject(char const* basePosePath, char * texData);
 
 	// Add an animation to the list 
 	// either by a file containing several poses,
@@ -58,6 +60,10 @@ public:
 	void setCurrentAnim(int newAnimIndex);
 
 	void update(float deltaTime);
+
+private:
+	// Set the base pose as the default animation
+	void setBaseAnim(char const* basePosePath);
 
 private:
 	std::vector<Animation> animations;
