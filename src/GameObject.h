@@ -5,8 +5,6 @@
 #include "objLoader.h"
 #include <glm\glm.hpp>
 
-static int textureStart = 0;
-
 class GameObject
 {
 public:
@@ -38,8 +36,6 @@ private:
 	GLuint uiVBO[3];
 	GLuint texHandle[1];
 	GLuint texSampler[1];
-
-	int textureUnit;
 };
 
 // Animated object takes a base pose, and holds several animations.
