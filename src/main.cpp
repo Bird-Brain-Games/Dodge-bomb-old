@@ -21,6 +21,7 @@
 #include "GameObject.h"
 #include "shaders.h"
 #include "math.h"
+#include "InputManager.h"
 
 float x_bomb = -2.0f;
 
@@ -78,7 +79,6 @@ float rz = 0.0f;
 float sx = 1.0f;
 float sy = 1.0f;
 float sz = 1.0f;
-int keydown[256];
 
 float g = 0;
 float r = 0.2;
@@ -438,7 +438,7 @@ void test()
 
 	for (int i = 0; i < object.size(); i++)
 	{
-		//object[i].draw(iModelViewProjectionLoc, mvp);
+		object[i].draw(iModelViewProjectionLoc, mvp);
 	}
 	
 	animation.draw(iModelViewProjectionLoc, mvp);
@@ -563,10 +563,7 @@ void test()
 */
 void KeyboardCallbackFunction(unsigned char key, int x, int y)
 {
-	//std::cout << "Key Down:" << (int)key << std::endl;
-
-	keydown[key] = true;
-
+	KEYBOARD_INPUT->SetActive(key, true);
 }
 
 /* function void KeyboardUpCallbackFunction(unsigned char, int,int)
@@ -575,101 +572,29 @@ void KeyboardCallbackFunction(unsigned char key, int x, int y)
 */
 void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 {
-	keydown[key] = false;
+	KEYBOARD_INPUT->SetActive(key, false);
 }
 
 void processInputs()
 {
-	float tempX, tempY, tempZ;
-	tempX = character_pos.x;
-	tempY = character_pos.y;
-	tempZ = character_pos.z;
-	if (keydown['j'])
+	if (KEYBOARD_INPUT->IsKeyDown('w'))
 	{
-		character_pos.x += playerSpeed;
-	}
-	if (keydown['l'])
-	{
-		character_pos.x -= playerSpeed;
-	}
-	if (keydown['u'])
-	{
-		character_pos.y += playerSpeed;
-	}
-	if (keydown['o'])
-	{
-		character_pos.y -= playerSpeed;
-	}
-	if (keydown['i'])
-	{
-		character_pos.z += playerSpeed;
-	}
-	if (keydown['k'])
-	{
-		character_pos.z -= playerSpeed;
-	}
-	//fg ht ry
 
-	if (keydown['f'])
-	{
-		UI_pos.x -= playerSpeed;
 	}
-	if (keydown['h'])
-	{
-		UI_pos.x += playerSpeed;
-	}
-	if (keydown['t'])
-	{
-		UI_pos.y += playerSpeed;
-	}
-	if (keydown['g'])
-	{
-		UI_pos.y -= playerSpeed;
-	}
-	if (keydown['y'])
-	{
-		UI_pos.z += playerSpeed;
-	}
-	if (keydown['r'])
-	{
-		UI_pos.z -= playerSpeed;
-	}
-
-	if (character_pos.z > tempZ)
-	{
-		animate = true;
-		dirForward = true;
-	}
-	else if (character_pos.z < tempZ)
-	{
-		animate = true;
-		dirForward = true;
-	}
-	else
-		animate = false;
-
-
-	if (keydown['z'])
+	if (KEYBOARD_INPUT->CheckPressEvent('z'));
 	{
 		lock = !lock;
 	}
-	if (keydown['q'])
+	if (KEYBOARD_INPUT->CheckPressEvent('q') ||
+		KEYBOARD_INPUT->CheckPressEvent(27))
 	{
 		glutLeaveMainLoop();
 	}
-	if (lock == true)
-	{
-		glutWarpPointer(windowWidth / 2, windowHeight / 2);
-	}
-	if (keydown['x'])
-	{
-		animate = !animate;
-	}
-	if (keydown['c'])
+	if (KEYBOARD_INPUT->CheckPressEvent('c'))
 	{
 		cameraLock = !cameraLock;
 	}
-	if (keydown[32])
+	if (KEYBOARD_INPUT->CheckPressEvent(' '))
 	{
 		if (sphereTimer <= 0)
 		{
@@ -681,6 +606,16 @@ void processInputs()
 			sphereTimer += dt;
 		}
 
+	}
+}
+
+// Handles all events (collision, etc.)
+void handleEvents(float dt)
+{
+	// Handle events
+	if (lock == true)
+	{
+		glutWarpPointer(windowWidth / 2, windowHeight / 2);
 	}
 }
 
@@ -698,10 +633,13 @@ void TimerCallbackFunction(int value)
 	/* this call makes it actually show up on screen */
 	glutPostRedisplay();
 	/* this call gives it a proper frame delay to hit our target FPS */
-	
-	// Process all inputs
-	processInputs();
 
+	// Process all inputs /////////////////////////////////////////////////////
+	processInputs();
+	// Flush event list
+	KEYBOARD_INPUT->WipeEventList();
+
+	//// update physics	///////////////////////////////////////////////////////
 	static int elapsedTimeAtLastTick = 0;
 	int totalElapsedTime = glutGet(GLUT_ELAPSED_TIME);
 
@@ -709,12 +647,15 @@ void TimerCallbackFunction(int value)
 	dt /= 1000.0f;
 	elapsedTimeAtLastTick = totalElapsedTime;
 
-	// Update game objects
+	// Update the objects /////////////////////////////////////////////////////
 	for (GameObject & o : object)
 	{
 		o.update(dt);
 	}
 	animation.update(dt);
+
+	//	handle all events /////////////////////////////////////////////////////
+	handleEvents(dt);
 
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }
@@ -767,6 +708,7 @@ void MouseClickCallbackFunction(int button, int state, int x, int y)
 */
 void MouseMotionCallbackFunction(int x, int y)
 {
+
 }
 
 /* function MousePassiveMotionCallbackFunction()
@@ -830,6 +772,10 @@ int main(int argc, char **argv)
 
 	/* start the event handler */
 	glutMainLoop();
+
+	// Cleanup
+	KEYBOARD_INPUT->Destroy();
+
 	return 0;
 
 

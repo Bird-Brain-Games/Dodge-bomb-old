@@ -6,14 +6,12 @@
 GameObject::GameObject()
 {
 	isEnvironment = false;
-	textureUnit = 0;
 }
 
 GameObject::GameObject(char const* filePath)
 {
 	loadBaseObject(filePath);
 	isEnvironment = false;
-	textureUnit = 0;
 }
 
 GameObject::GameObject(char const* filePath, char * texData)
@@ -21,7 +19,6 @@ GameObject::GameObject(char const* filePath, char * texData)
 	loadBaseObject(filePath);
 	bindTexture(texData);
 	isEnvironment = false;
-	textureUnit = 0;
 }
 
 void GameObject::loadBaseObject(char const* filePath)
@@ -70,10 +67,7 @@ void GameObject::bindTexture(char* filePath)
 {
 	glGenTextures(1, &texHandle[0]);
 	glGenSamplers(1, &texSampler[0]);
-
-	textureUnit = GL_TEXTURE0 + textureStart;
-	textureStart++;
-
+	
 	texHandle[0] = ilutGLLoadImage(filePath);
 	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
 
