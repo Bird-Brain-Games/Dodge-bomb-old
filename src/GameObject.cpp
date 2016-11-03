@@ -83,6 +83,23 @@ void GameObject::bindTexture(char* filePath)
 		ilGetData()); /* Texture specification */
 }
 
+void GameObject::setPos(glm::vec3 const & _set) { pos = _set; };
+void GameObject::setVel(glm::vec3 const & _set) { vel = _set; };
+void GameObject::setAcc(glm::vec3 const & _set) { acc = _set; };
+void GameObject::setRot(glm::vec3 const & _set) { rot = _set; };
+
+void GameObject::addPos(glm::vec3 const & _set) { pos += _set; };
+void GameObject::addVel(glm::vec3 const & _set) { vel += _set; };
+void GameObject::addAcc(glm::vec3 const & _set) { acc += _set; };
+void GameObject::addRot(glm::vec3 const & _set) { rot += _set; };
+
+glm::vec3 const & GameObject::getPos() const { return  pos; };
+glm::vec3 const & GameObject::getVel() const { return  vel; };
+glm::vec3 const & GameObject::getAcc() const { return  acc; };
+glm::vec3 const & GameObject::getRot() const { return  rot; };
+
+
+//////////ANIMATED OBJECT
 
 AnimatedObject::AnimatedObject()
 	: GameObject()
@@ -153,4 +170,25 @@ void AnimatedObject::setCurrentAnim(int newAnimIndex)
 	}
 
 	currentAnim = newAnimIndex;
+}
+
+PlayerObject::PlayerObject(char const* basePosePath, char * texData, char const* bombPath, char * bombTex, int _temp)
+	: AnimatedObject(basePosePath, texData), bomb(bombPath, bombTex)
+{
+	bombThrow = false;
+	bombTimer = 0;
+	score = 0;
+	charge = 0;
+	lives = 2;
+	temp = _temp;
+}
+
+PlayerObject::PlayerObject()
+{
+	bombThrow = false;
+	bombTimer = 0;
+	score = 0;
+	charge = 0;
+	lives = 2;
+	temp = NULL;
 }
