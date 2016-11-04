@@ -5,6 +5,21 @@
 #include "objLoader.h"
 #include <glm\glm.hpp>
 
+enum ForceMode
+{
+	Force = 0,		// adds continuous force, uses mass
+	Acceleration,	// adds continuous force, ignores mass
+	Impulse,		// adds instant impulse, uses mass
+	VelocityChange	// adds instant velocity change, ignores mass
+};
+
+struct Collision
+{
+	bool status;
+	glm::vec3 overlap;
+	glm::vec3 normal;
+};
+
 class GameObject
 {
 public:
@@ -23,11 +38,20 @@ public:
 	Loader & getBaseLoader() { return obj; }
 	GLuint const* getVAO() { return uiVAO; }	// To be removed probably
 
+	// Physics
+	void addForce(float dt, glm::vec3 const& force, ForceMode mode = ForceMode::Force);
+
+	// Collision
+	void setScale(glm::vec3 newScale, bool changeBoundingBox = false);
+	Collision checkCollision(GameObject * other);
+	void fastCollisionFix(Collision const& col, float deltaTime);
+
 	//setters and getters
 	void setPos(glm::vec3 const & _set);
 	void setVel(glm::vec3 const & _set);
 	void setAcc(glm::vec3 const & _set);
 	void setRot(glm::vec3 const & _set);
+	void setMass(float _mass);
 
 	void addPos(glm::vec3 const & _set);
 	void addVel(glm::vec3 const & _set);
@@ -40,10 +64,15 @@ public:
 	glm::vec3 const & getRot() const ;
 
 protected:
+	// Physics variables
+	float mass;
 	glm::vec3 pos;
 	glm::vec3 vel;
 	glm::vec3 acc;
 	glm::vec3 rot;
+
+	glm::vec3 dimension;
+	glm::vec3 scale;
 
 private:
 	Loader obj;

@@ -1,17 +1,22 @@
 #include "GameObject.h"
 #include <IL\ilut.h>
 #include "glm\gtc\type_ptr.hpp"
+#include "GLM\gtx\projection.hpp"
 #include <stdexcept>
 
 GameObject::GameObject()
 {
 	isEnvironment = false;
+	scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
 }
 
 GameObject::GameObject(char const* filePath)
 {
 	loadBaseObject(filePath);
 	isEnvironment = false;
+	scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
 }
 
 GameObject::GameObject(char const* filePath, char * texData)
@@ -19,6 +24,8 @@ GameObject::GameObject(char const* filePath, char * texData)
 	loadBaseObject(filePath);
 	bindTexture(texData);
 	isEnvironment = false;
+	scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
 }
 
 void GameObject::loadBaseObject(char const* filePath)
@@ -28,7 +35,8 @@ void GameObject::loadBaseObject(char const* filePath)
 
 void GameObject::update(float deltaTime)
 {
-
+	setVel(getVel() + (getAcc() * deltaTime));
+	setPos(getPos() + (getVel() * deltaTime));
 }
 
 void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
@@ -38,6 +46,80 @@ void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 	glBindVertexArray(uiVAO[0]);
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
+}
+
+void GameObject::addForce(float dt, glm::vec3 const& force, ForceMode mode)
+{
+	switch (mode)
+	{
+	case Force:
+		addAcc(mass * force / pow(dt, 2.0f));
+		break;
+	case Acceleration:
+		addAcc(force / pow(dt, 2.0f));
+		break;
+	case Impulse:
+		addAcc(mass * force / dt);
+		break;
+	case VelocityChange:
+		addAcc(force / dt);
+		break;
+	default:
+		break;
+	}
+}
+
+void GameObject::setScale(glm::vec3 newScale, bool changeBoundingBox)
+{
+	glm::vec3 oldScale = scale;
+	scale = newScale;
+	if (changeBoundingBox)
+	{
+		dimension *= (oldScale - scale);	// TO VERIFY
+	}
+
+}
+
+Collision GameObject::checkCollision(GameObject * other)
+{
+	Collision check;
+
+	float thisMaxX = getPos().x + dimension.x;	// getPos() - width / 2
+	float thisMinX = getPos().x - dimension.x;
+	float thisMaxY = getPos().y + dimension.y;
+	float thisMinY = getPos().y - dimension.y;
+	float thisMaxZ = getPos().z + dimension.z;
+	float thisMinZ = getPos().z - dimension.z;
+
+	float otherMaxX = other->getPos().x + other->dimension.x;	// getPos() - width / 2
+	float otherMinX = other->getPos().x - other->dimension.x;
+	float otherMaxY = other->getPos().y + other->dimension.y;
+	float otherMinY = other->getPos().y - other->dimension.y;
+	float otherMaxZ = other->getPos().z + other->dimension.z;
+	float otherMinZ = other->getPos().z - other->dimension.z;
+
+	check.overlap.x = thisMaxX - otherMinX;
+	check.overlap.y = thisMaxY - otherMinY;
+	check.overlap.z = thisMaxZ - otherMinZ;
+
+	check.status = (
+		(thisMinX <= otherMaxX && thisMaxX >= otherMinX) &&
+		(thisMinY <= otherMaxY && thisMaxY >= otherMinY) &&
+		(thisMinZ <= otherMaxZ && thisMaxZ >= otherMinZ));
+
+	if (getVel() == glm::vec3(0.0f))	// if both stationary, we have a problem
+		check.normal = glm::vec3(0.0f, 0.0f, 0.0f);
+	else
+		check.normal = glm::normalize(other->getPos() - getPos());
+
+	return check;
+}
+
+void GameObject::fastCollisionFix(Collision const& col, float deltaTime)
+{
+	glm::vec3 correction = -glm::proj(col.overlap, getVel());
+	std::cout << "Correction: " << correction.x << ", " << correction.y << std::endl;
+	addPos(-correction * deltaTime);
 }
 
 void GameObject::bindObjectData(GLuint DrawType)
@@ -81,6 +163,7 @@ void GameObject::setPos(glm::vec3 const & _set) { pos = _set; };
 void GameObject::setVel(glm::vec3 const & _set) { vel = _set; };
 void GameObject::setAcc(glm::vec3 const & _set) { acc = _set; };
 void GameObject::setRot(glm::vec3 const & _set) { rot = _set; };
+void GameObject::setMass(float _mass) { mass = _mass; }
 
 void GameObject::addPos(glm::vec3 const & _set) { pos += _set; };
 void GameObject::addVel(glm::vec3 const & _set) { vel += _set; };

@@ -259,6 +259,8 @@ void initScene()
 	object[3].bindObjectData();
 	object[4].bindObjectData();
 
+	object[0].setPos(glm::vec3(0.0, 10.0, 0.0));
+
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
 
@@ -413,14 +415,14 @@ void drawUI()
 void test()
 {
 
+	
 
-
-	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
-	{
-		//std::cout << "collison!!" << std::endl;
-	}
-	else
-		animation[0].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
+	//if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
+	//{
+	//	//std::cout << "collison!!" << std::endl;
+	//}
+	//else
+	//	animation[0].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
 
 
 	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
@@ -558,22 +560,22 @@ void test()
 
 			boundingBoxes[spot].max = animation[i].bomb.getPos() + dimensions[3];
 			boundingBoxes[spot].min = animation[i].bomb.getPos() - dimensions[3];
-			if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[spot2]))//checks whether we hit the other person
-			{
-				//std::cout << "score" << std::endl;
-				animation[i].bombThrow = false;
-				animation[i].bombTimer = 0;
-				animation[i].score++;
-				if (i = 1)
-					animation[1].lives--;
-				else
-					animation[0].lives--;
-			}
-			if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[2])) // checks whether we hit the floor
-			{
-				animation[i].bombThrow = false;
-				animation[i].bombTimer = 0;
-			}
+			//if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[spot2]))//checks whether we hit the other person
+			//{
+			//	//std::cout << "score" << std::endl;
+			//	animation[i].bombThrow = false;
+			//	animation[i].bombTimer = 0;
+			//	animation[i].score++;
+			//	if (i = 1)
+			//		animation[1].lives--;
+			//	else
+			//		animation[0].lives--;
+			//}
+			//if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[2])) // checks whether we hit the floor
+			//{
+			//	animation[i].bombThrow = false;
+			//	animation[i].bombTimer = 0;
+			//}
 		}
 		//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
 		//{
@@ -824,6 +826,16 @@ void handleEvents(float dt)
 	if (lock == true)
 	{
 		glutWarpPointer(windowWidth / 2, windowHeight / 2);
+	}
+
+	// Collision
+	for (int i = 1; i < object.size(); i++)
+	{
+		Collision check = object[0].checkCollision(&object[i]);
+		if (check.status == true)
+		{
+			object[0].fastCollisionFix(check, dt);
+		}
 	}
 }
 
