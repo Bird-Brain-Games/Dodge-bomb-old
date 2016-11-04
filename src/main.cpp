@@ -22,12 +22,19 @@
 #include "shaders.h"
 #include "math.h"
 #include "InputManager.h"
+#include "controller.h"
+
+glm::mat4 rotationMatrix;
+
+controller p1(0);
+controller p2(1);
+
 
 float x_bomb = -2.0f;
 
 // Defines and Core variables
 #define FRAMES_PER_SECOND 60
-const int FRAME_DELAY = 2000 / FRAMES_PER_SECOND; // Miliseconds per frame
+const int FRAME_DELAY = 1000 / FRAMES_PER_SECOND; // Miliseconds per frame
 
 int windowWidth = 1920;
 int windowHeight = 1080;
@@ -43,10 +50,11 @@ bool assignment = false;
 int score = 0;
 
 
-glm::vec3 position = glm::vec3(-9.6f, 28.7f, -75.0f);
-glm::vec3 character_pos = glm::vec3(0.0f, 2.5f, -40.6f);
+glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
+
 glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
 glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 sphere_pos2 = glm::vec3(0.0f, 0.0f, 0.0f);
 
 glm::vec3 bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
 
@@ -55,7 +63,7 @@ float horizontalAngle = 3.14f;
 // Initial vertical angle : none
 float verticalAngle = 0.0f;
 // Initial Field of View
-float initialFoV = 45.0f;
+float initialFoV = 44.4000092;
 
 float playerSpeed = 0.4f; // the players speed. used to how fast animation needs to be.
 
@@ -86,12 +94,12 @@ float b = 0.2;
 
 int sphereSpot;
 
-bool lock = true; //locks the mouse to the center of the screen;
+bool lock = false; //locks the mouse to the center of the screen;
 float lastTime;
 
 glm::vec3 score_position = glm::vec3(0.0f, 0.0f, 0.0f);
 
-float rotation = 0;
+glm::vec3 rotation = glm::vec3(0.0f);
 float dt;
 float sphereTimer = 0;
 UINT testing;
@@ -103,7 +111,7 @@ vector<GameObject> UI;
 vector<glm::vec3> dimensions;
 // chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
-AnimatedObject animation;
+PlayerObject animation[2];
 
 Collision aabb;
 
@@ -141,8 +149,8 @@ void makeMatricies()
 	}
 	else
 	{
-		horizontalAngle = 0.0599999987;
-		verticalAngle = -0.219999850;
+		horizontalAngle = 1.57000148;
+		verticalAngle = -0.520000100;
 	}
 	direction = glm::vec3(
 		cos(verticalAngle) * sin(horizontalAngle),
@@ -214,35 +222,45 @@ void initScene()
 	temp.max = glm::vec3(0) + dimensions[0];
 	temp.min = glm::vec3(0) - dimensions[0];
 	boundingBoxes.push_back(temp);
-	temp.max = character_pos + dimensions[1];
-	temp.min = character_pos - dimensions[1];
+	temp.max = animation[0].getPos() + dimensions[1];//bot 1
+	temp.min = animation[0].getPos() - dimensions[1];
 	boundingBoxes.push_back(temp);
-	temp.max = glm::vec3(0.0f, -3.0f, 0.0f) + dimensions[2];
+	temp.max = glm::vec3(0.0f, -3.0f, 0.0f) + dimensions[2];//table 2 
 	temp.min = glm::vec3(0.0f, -3.0f, 0.0f) - dimensions[2];
 	boundingBoxes.push_back(temp);
-	temp.max = character2_pos + dimensions[1];
-	temp.min = character2_pos - dimensions[1];
+	temp.max = animation[0].getPos() + dimensions[1];//bot2 3
+	temp.min = animation[0].getPos() - dimensions[1];
 	boundingBoxes.push_back(temp);
-	temp.max = sphere_pos + dimensions[3];
-	temp.min = sphere_pos - dimensions[3];
+	temp.max = animation[0].bomb.getPos() + dimensions[3];//bomb 4 
+	temp.min = animation[0].bomb.getPos() - dimensions[3];
+	boundingBoxes.push_back(temp);
+	temp.max = animation[0].bomb.getPos() + dimensions[3];//bomb2  5
+	temp.min = animation[0].bomb.getPos() - dimensions[3];
 	boundingBoxes.push_back(temp);
 
-	animation = AnimatedObject("obj\\robot\\base.obj", "img\\Bombot.jpg");
-	animation.addAnim("obj\\robot\\robot_walk_anim.txt");
-	animation.setCurrentAnim(1);
+	animation[0] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 4);
+	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
+	animation[0].setCurrentAnim(1);
+
+	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 5);
+	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
+	animation[1].setCurrentAnim(1);
 
 	object.push_back(GameObject("obj\\robot\\base.obj", "img\\Bombot.jpg"));
 	sphereSpot = object.size();
 	object.push_back(GameObject("obj\\bomb.obj", "img\\bPileDiffuse.png"));
 	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg"));
 	object.push_back(GameObject("obj\\robot\\base2.obj", "img\\Bombot2.jpg"));
+	object.push_back(GameObject("obj\\bomb.obj", "img\\bPileDiffuse.png"));
 
 	object[0].bindObjectData();
 	object[1].bindObjectData();
 	object[2].bindObjectData();
 	object[3].bindObjectData();
+	object[4].bindObjectData();
 
-	animation.bindObjectData();
+	animation[0].bindObjectData();
+	animation[1].bindObjectData();
 
 	UI[0].bindObjectData();
 	UI[1].bindObjectData();
@@ -297,8 +315,6 @@ void initScene()
 	//glUseProgram(testing);
 
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	glEnable(GL_DEPTH_TEST);
 	glClearDepth(1.0);
 }
@@ -316,19 +332,17 @@ void DisplayCallbackFunction(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glViewport(0, 0, windowWidth, windowHeight);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+
 	gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
 	test();
 
 
 	glViewport(0, 0, windowWidth, windowHeight);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+
+
 	glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
-	//drawUI();
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	drawUI();
+
 
 
 	//glViewport(0, windowHeight / 2, windowWidth, windowHeight / 2);
@@ -400,28 +414,17 @@ void test()
 {
 
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 
-	////gravity
-	//if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
-	//{
-
-	//}
-	//else
-	//{
-	//	character_pos.y -= 0.1;
-	//}
-	////if (boundingBoxes[3])
-	////std::cout << object.getVertex()[0].x << std::endl;
-	////std::cout << lerp<glm::vec3>(object2.getVertex()[0], object3.getVertex()[0], time).x << std::endl;
-	//glLoadIdentity();
-	//rotation += 1;
+	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
+	{
+		//std::cout << "collison!!" << std::endl;
+	}
+	else
+		animation[0].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
 
 
-
-	//glClearColor(0.0f, 0.2f, 0.3f, 0.f);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
@@ -440,9 +443,56 @@ void test()
 	{
 		object[i].draw(iModelViewProjectionLoc, mvp);
 	}
-	
-	animation.draw(iModelViewProjectionLoc, mvp);
 
+
+	mvp = ProjectionMatrix * ViewMatrix * identity;
+
+	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, -3.0f, 0.0f, 1.0f);
+
+
+	object[2].draw(iModelViewProjectionLoc, mvp);
+
+
+	glm::mat4  ModelMatrix = glm::mat4{
+		scale, 0.0f, 0.0f, 0.0f,
+		0.0f, scale, 0.0f, 0.0f,
+		0.0f, 0.0f, scale, 0.0f,
+		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+
+	rotationMatrix = glm::mat4{
+		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[0].lives > 0)
+		animation[0].draw(iModelViewProjectionLoc, mvp);
+
+
+	ModelMatrix = glm::mat4{
+	  scale, 0.0f, 0.0f, 0.0f,
+	  0.0f, scale, 0.0f, 0.0f,
+	  0.0f, 0.0f, scale, 0.0f,
+	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+
+	rotationMatrix = glm::mat4{
+		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[1].lives > 0)
+		animation[1].draw(iModelViewProjectionLoc, mvp);
 	////glm::mat4 ModelMatrix = glm::mat4{
 	////	1.0, 0.0f, 0.0f, 0.0f,
 	////	0.0f, cos(90), -sin(90), 0.0f,
@@ -467,50 +517,70 @@ void test()
 	//glBindVertexArray(uiVAO2[1]);
 	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	//glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
+	for (int i = 0; i < 2; i++)
+	{
+		if (animation[i].bombThrow == true && animation[i].bombTimer > 0)
+		{
 
-	//if (bomb == true && sphereTimer > 0)
-	//{
-	//	glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
-	//	glBindVertexArray(uiVAO2[0]);
-	//	sphereTimer += dt;
+			animation[i].bombTimer += dt;
 
-	//	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//		1.0f, 0.0f, 0.0f, 0.0f,
-	//		0.0f, 1.0f, 0.0f, 0.0f,
-	//		0.0f, 0.0f, 1.0f, 0.0f,
-	//		sphere_pos.x, sphere_pos.y, sphere_pos.z, 1.0f);
+			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-	//	//sphere.x++;
-	//	//sphere.y++;
-	//	sphere_pos.z += bomb_acceleration.z;
-	//	sphere_pos.x += bomb_acceleration.x;
-	//	sphere_pos.y += bomb_acceleration.y;
-	//	bomb_acceleration.y -= 0.05;
-	//	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//	glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot].getVertex().size());
-	//	if (sphereTimer > 1.5)
-	//	{
-	//		sphereTimer = 0;
-	//	}
-	//	boundingBoxes[4].max = sphere_pos + dimensions[3];
-	//	boundingBoxes[4].min = sphere_pos - dimensions[3];
-	//	if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[3]))//checks whether we hit the other person
-	//	{
-	//		std::cout << "score" << std::endl;
-	//		bomb = false;
-	//		sphereTimer = 0;
-	//		score++;
-	//	}
-	//	if (aabb.collisionAABB(boundingBoxes[4], boundingBoxes[2]))
-	//	{
-	//		bomb = false;
-	//		sphereTimer = 0;
-	//	}
-	//}
-	//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))
-	//{
-	//	x_bomb -= 0.3f;
-	//}
+			//sphere.x++;
+			//sphere.y++;
+
+			animation[i].bomb.addPos(animation[i].bomb.getVel());
+			animation[i].bomb.addVel(glm::vec3(0.0f, -0.05f, 0.0f));
+
+			if (animation[i].lives > 0)
+				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
+
+			if (animation[i].bombTimer > 1.5)
+			{
+				animation[i].bombTimer = 0;
+			}
+			int spot = 0;
+			int spot2 = 0;
+			if (i == 0)
+			{
+				spot = 4;
+				spot2 = 3;
+			}
+			else
+			{
+				spot = 5;
+				spot2 = 1;
+			}
+
+			boundingBoxes[spot].max = animation[i].bomb.getPos() + dimensions[3];
+			boundingBoxes[spot].min = animation[i].bomb.getPos() - dimensions[3];
+			if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[spot2]))//checks whether we hit the other person
+			{
+				//std::cout << "score" << std::endl;
+				animation[i].bombThrow = false;
+				animation[i].bombTimer = 0;
+				animation[i].score++;
+				if (i = 1)
+					animation[1].lives--;
+				else
+					animation[0].lives--;
+			}
+			if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[2])) // checks whether we hit the floor
+			{
+				animation[i].bombThrow = false;
+				animation[i].bombTimer = 0;
+			}
+		}
+		//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
+		//{
+		//	x_bomb -= 0.3f;
+		//}
+
+	}
 
 
 	//glBindVertexArray(uiVAO[0]);
@@ -547,12 +617,8 @@ void test()
 	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
-	//boundingBoxes[1].max = character_pos + dimensions[1];
-	//boundingBoxes[1].min = character_pos - dimensions[1];
-
-
-
-
+	boundingBoxes[1].max = animation[0].getPos() + dimensions[1];
+	boundingBoxes[1].min = animation[0].getPos() - dimensions[1];
 
 }
 
@@ -575,13 +641,158 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 	KEYBOARD_INPUT->SetActive(key, false);
 }
 
+void characterInput(PlayerObject *player, controller conPlayer)
+{
+	glm::vec3 tempVel;
+	tempVel = player->getVel();;
+	Coords stick = conPlayer.getLeftStick();
+	//std::cout << stick.x << "   " << stick.y << std::endl;
+	if (keydown['j'] || stick.y > -0.1)
+	{
+		player->addPos(glm::vec3(playerSpeed, 0.0f, 0.0f));
+		//	std::cout << "left" << std::endl;
+	}
+	if (keydown['l'] || stick.y < 0.1)
+	{
+		player->addPos(glm::vec3(-playerSpeed, 0.0f, 0.0f));
+		//	std::cout << "right" << std::endl;
+	}
+	if (keydown['u'])
+	{
+		player->addPos(glm::vec3(0.0f, playerSpeed, 0.0f));
+	}
+	if (keydown['o'])
+	{
+		player->addPos(glm::vec3(0.0f, -playerSpeed, 0.0f));
+	}
+	if (keydown['i'] || stick.x > 0.1)
+	{
+		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed));
+		//	std::cout << "up" << std::endl;
+	}
+	if (keydown['k'] || stick.x < -0.1)
+	{
+		player->addPos(glm::vec3(0.0f, 0.0f, -playerSpeed));
+		//	std::cout << "down" << std::endl;
+	}
+
+
+	if (keydown[32] || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
+	{
+		player->charge += 0.03;
+
+		//glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
+
+		//direction = glm::normalize(direction);
+		//player->bomb.setVel(glm::vec3(direction* player->charge));
+
+		//while (player->bombTimer < 1.5)
+		//{
+		//	player->bomb.addPos(player->bomb.getVel());
+		//	player->bombTimer += dt;
+		//	std::cout << player->bom. << std::endl;
+		//	if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
+		//	{
+		//		int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+		//		int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
+
+		//		//glUniform1i(sampler, 0);
+		//		//glActiveTexture(GL_TEXTURE0);
+
+		//		makeMatricies();
+		//		glm::mat4 ProjectionMatrix = getProjectionMatrix();
+		//		glm::mat4 ViewMatrix = getViewMatrix();
+		//		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+		//			1.0f, 0.0f, 0.0f, 0.0f,
+		//			0.0f, 1.0f, 0.0f, 0.0f,
+		//			0.0f, 0.0f, 1.0f, 0.0f,
+		//			player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
+
+		//		player->bomb.draw(iModelViewProjectionLoc, mvp);
+		//	}
+		//	boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
+		//	boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
+		//}
+
+		//player->bomb.setPos(player->getPos());
+		//player->bomb.setVel(glm::vec3(0));
+		//player->bombTimer = 0;
+
+		//boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
+		//boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
+	}
+	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false)
+	{
+		glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
+		direction = glm::normalize(direction);
+		player->bomb.setVel(glm::vec3(direction* player->charge));
+		player->bombThrow = true;
+		player->bomb.setPos(player->getPos());
+		player->bombTimer += dt;
+		player->charge = 0;
+	}
+	//if (player.z > tempZ)
+	//{
+	//	animate = true;
+	//	dirForward = true;
+	//}
+	//else if (character_pos.z < tempZ)
+	//{
+	//	animate = true;
+	//	dirForward = true;
+	//}
+	//else
+	//	animate = false;
+
+}
+bool selected = true;
 void processInputs()
 {
-	if (KEYBOARD_INPUT->IsKeyDown('w'))
-	{
+	//std::cout << p1.connected() << std::endl;
 
+	if (selected == true)
+	{
+		characterInput(&animation[0], p1);
+		characterInput(&animation[1], p2);
 	}
-	if (KEYBOARD_INPUT->CheckPressEvent('z'));
+	else
+	{
+		characterInput(&animation[0], p2);
+		characterInput(&animation[1], p1);
+	}
+	//fg ht ry
+
+	if (keydown['3'])
+		selected = false;
+	if (keydown['4'])
+		selected = true;
+
+	if (keydown['f'])
+	{
+		UI_pos.x -= playerSpeed;
+	}
+	if (keydown['h'])
+	{
+		UI_pos.x += playerSpeed;
+	}
+	if (keydown['t'])
+	{
+		UI_pos.y += playerSpeed;
+	}
+	if (keydown['g'])
+	{
+		UI_pos.y -= playerSpeed;
+	}
+	if (keydown['y'])
+	{
+		UI_pos.z += playerSpeed;
+	}
+	if (keydown['r'])
+	{
+		UI_pos.z -= playerSpeed;
+	}
+
+	if (KEYBOARD_INPUT->CheckPressEvent('z'))
 	{
 		lock = !lock;
 	}
@@ -594,19 +805,16 @@ void processInputs()
 	{
 		cameraLock = !cameraLock;
 	}
-	if (KEYBOARD_INPUT->CheckPressEvent(' '))
-	{
-		if (sphereTimer <= 0)
-		{
-			bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
-			bomb = true;
-			sphere_pos.x = character_pos.x;
-			sphere_pos.y = character_pos.y;
-			sphere_pos.z = character_pos.z;
-			sphereTimer += dt;
-		}
 
+	if (keydown['1'])
+	{
+		initialFoV += 0.05f;
 	}
+	if (keydown['2'])
+	{
+		initialFoV -= 0.05f;
+	}
+
 }
 
 // Handles all events (collision, etc.)
@@ -652,7 +860,7 @@ void TimerCallbackFunction(int value)
 	{
 		o.update(dt);
 	}
-	animation.update(dt);
+	//animation[0].update(dt);
 
 	//	handle all events /////////////////////////////////////////////////////
 	handleEvents(dt);
@@ -780,3 +988,4 @@ int main(int argc, char **argv)
 
 
 }
+
