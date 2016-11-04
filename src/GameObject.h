@@ -25,7 +25,7 @@ class GameObject
 public:
 	GameObject();
 	GameObject(char const* filePath);
-	GameObject(char const* filePath, char * texData);
+	GameObject(char const* filePath, char * texData, glm::vec3 dimensions);
 
 	void loadBaseObject(char const* filePath);
 
@@ -42,7 +42,6 @@ public:
 	void addForce(float dt, glm::vec3 const& force, ForceMode mode = ForceMode::Force);
 
 	// Collision
-	void setScale(glm::vec3 newScale, bool changeBoundingBox = false);
 	Collision checkCollision(GameObject * other);
 	void fastCollisionFix(Collision const& col, float deltaTime);
 
@@ -52,6 +51,7 @@ public:
 	void setAcc(glm::vec3 const & _set);
 	void setRot(glm::vec3 const & _set);
 	void setMass(float _mass);
+	void setScale(glm::vec3 newScale, bool changeBoundingBox = true);
 
 	void addPos(glm::vec3 const & _set);
 	void addVel(glm::vec3 const & _set);
@@ -90,7 +90,7 @@ class AnimatedObject : public GameObject
 public:
 	AnimatedObject();
 	AnimatedObject(char const* basePosePath);
-	AnimatedObject(char const* basePosePath, char * texData);
+	AnimatedObject(char const* basePosePath, char * texData, glm::vec3 _dimension);
 
 	// Add an animation to the list 
 	// either by a file containing several poses,
@@ -112,14 +112,21 @@ protected:
 	int currentAnim;
 };
 
+// Bomb class 
+class Bomb : public GameObject
+{
+public:
+	Bomb();
+	Bomb(char const* basePosePath, char * texData);
+};
+
 
 class PlayerObject : public AnimatedObject
 {
 public:
-	PlayerObject(char const* basePosePath, char * texData, char const* bombPath, char * bombTex, int _temp);
+	PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension);
 	PlayerObject();
-	GameObject bomb;
-	int temp;//temp variable to tell me what bounding box to use for the bomb. will be replaced when the bounding boxes are added to class.
+	Bomb bomb;
 	bool bombThrow;
 	float bombTimer;
 	int score;

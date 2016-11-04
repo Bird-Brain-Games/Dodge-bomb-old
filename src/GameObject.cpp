@@ -7,25 +7,25 @@
 GameObject::GameObject()
 {
 	isEnvironment = false;
-	scale = glm::vec3(1.0f, 1.0f, 1.0f);
-	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
+	scale = glm::vec3(1.0f);
+	dimension = glm::vec3(1.0f);
 }
 
 GameObject::GameObject(char const* filePath)
 {
 	loadBaseObject(filePath);
 	isEnvironment = false;
-	scale = glm::vec3(1.0f, 1.0f, 1.0f);
-	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
+	scale = glm::vec3(1.0f);
+	dimension = glm::vec3(1.0f);
 }
 
-GameObject::GameObject(char const* filePath, char * texData)
+GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimension)
 {
 	loadBaseObject(filePath);
 	bindTexture(texData);
 	isEnvironment = false;
-	scale = glm::vec3(1.0f, 1.0f, 1.0f);
-	dimension = glm::vec3(1.0f, 1.0f, 1.0f) * scale;
+	dimension = dimension;
+	scale = glm::vec3(1.0f);
 }
 
 void GameObject::loadBaseObject(char const* filePath)
@@ -75,7 +75,7 @@ void GameObject::setScale(glm::vec3 newScale, bool changeBoundingBox)
 	scale = newScale;
 	if (changeBoundingBox)
 	{
-		dimension *= (oldScale - scale);	// TO VERIFY
+		dimension *= scale;
 	}
 
 }
@@ -157,6 +157,8 @@ void GameObject::bindTexture(char* filePath)
 		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
 		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
 		ilGetData()); /* Texture specification */
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void GameObject::setPos(glm::vec3 const & _set) { pos = _set; };
@@ -192,8 +194,8 @@ AnimatedObject::AnimatedObject(const char* basePosePath)
 	setBaseAnim(basePosePath);
 }
 
-AnimatedObject::AnimatedObject(char const* basePosePath, char * texData)
-	: GameObject(basePosePath, texData)
+AnimatedObject::AnimatedObject(char const* basePosePath, char * texData, glm::vec3 _dimension)
+	: GameObject(basePosePath, texData, _dimension)
 {
 	currentAnim = 0;
 	setBaseAnim(basePosePath);
@@ -249,23 +251,36 @@ void AnimatedObject::setCurrentAnim(int newAnimIndex)
 	currentAnim = newAnimIndex;
 }
 
-PlayerObject::PlayerObject(char const* basePosePath, char * texData, char const* bombPath, char * bombTex, int _temp)
-	: AnimatedObject(basePosePath, texData), bomb(bombPath, bombTex)
+PlayerObject::PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension)
+	: AnimatedObject(basePosePath, texData, _dimension),
+	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png")
 {
 	bombThrow = false;
 	bombTimer = 0;
 	score = 0;
 	charge = 0;
 	lives = 2;
-	temp = _temp;
 }
 
 PlayerObject::PlayerObject()
+	: AnimatedObject()
 {
 	bombThrow = false;
 	bombTimer = 0;
 	score = 0;
 	charge = 0;
 	lives = 2;
-	temp = NULL;
+}
+
+
+Bomb::Bomb()
+	: GameObject()
+{
+
+}
+
+Bomb::Bomb(char const* basePosePath, char * texData)
+	: GameObject(basePosePath, texData, glm::vec3(0.44f, 0.47f, 0.44f))
+{
+
 }

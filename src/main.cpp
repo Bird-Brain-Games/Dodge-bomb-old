@@ -52,9 +52,9 @@ int score = 0;
 
 glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
 
-glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
-glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 sphere_pos2 = glm::vec3(0.0f, 0.0f, 0.0f);
+//glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
+//glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+//glm::vec3 sphere_pos2 = glm::vec3(0.0f, 0.0f, 0.0f);
 
 glm::vec3 bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
 
@@ -108,9 +108,6 @@ CShader vertShader;
 CShader fragShader;
 vector<GameObject> object;
 vector<GameObject> UI;
-vector<glm::vec3> dimensions;
-// chest, robot, floor, robot2
-vector<boundingBox> boundingBoxes;
 PlayerObject animation[2];
 
 Collision aabb;
@@ -210,56 +207,26 @@ but it allocates in memory for the object and stuff, so that's good.
 
 void initScene()
 {
-	UI.push_back(GameObject("obj\\score.obj", "img\\score.png"));
+	UI.push_back(GameObject("obj\\score.obj", "img\\score.png", glm::vec3(1.0f)));
 	UI.push_back(GameObject("obj\\number.obj"));
 
-	dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
-	dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
-	dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
-	dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
+	//dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
+	//dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
+	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
+	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
-	boundingBox temp;
-	temp.max = glm::vec3(0) + dimensions[0];
-	temp.min = glm::vec3(0) - dimensions[0];
-	boundingBoxes.push_back(temp);
-	temp.max = animation[0].getPos() + dimensions[1];//bot 1
-	temp.min = animation[0].getPos() - dimensions[1];
-	boundingBoxes.push_back(temp);
-	temp.max = glm::vec3(0.0f, -3.0f, 0.0f) + dimensions[2];//table 2 
-	temp.min = glm::vec3(0.0f, -3.0f, 0.0f) - dimensions[2];
-	boundingBoxes.push_back(temp);
-	temp.max = animation[0].getPos() + dimensions[1];//bot2 3
-	temp.min = animation[0].getPos() - dimensions[1];
-	boundingBoxes.push_back(temp);
-	temp.max = animation[0].bomb.getPos() + dimensions[3];//bomb 4 
-	temp.min = animation[0].bomb.getPos() - dimensions[3];
-	boundingBoxes.push_back(temp);
-	temp.max = animation[0].bomb.getPos() + dimensions[3];//bomb2  5
-	temp.min = animation[0].bomb.getPos() - dimensions[3];
-	boundingBoxes.push_back(temp);
-
-	animation[0] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 4);
+	animation[0] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
+	animation[0].setPos(glm::vec3(-5.0, 10.0, 0.0));
 
-	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 5);
+	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
+	animation[0].setPos(glm::vec3(-5.0, 10.0, 0.0));
 
-	object.push_back(GameObject("obj\\robot\\base.obj", "img\\Bombot.jpg"));
-	sphereSpot = object.size();
-	object.push_back(GameObject("obj\\bomb.obj", "img\\bPileDiffuse.png"));
-	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg"));
-	object.push_back(GameObject("obj\\robot\\base2.obj", "img\\Bombot2.jpg"));
-	object.push_back(GameObject("obj\\bomb.obj", "img\\bPileDiffuse.png"));
-
-	object[0].bindObjectData();
-	object[1].bindObjectData();
-	object[2].bindObjectData();
-	object[3].bindObjectData();
-	object[4].bindObjectData();
-
-	object[0].setPos(glm::vec3(0.0, 10.0, 0.0));
+	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object[0].bindObjectData(GL_STATIC_DRAW);
 
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
@@ -456,7 +423,7 @@ void test()
 		0.0f, -3.0f, 0.0f, 1.0f);
 
 
-	object[2].draw(iModelViewProjectionLoc, mvp);
+	object[0].draw(iModelViewProjectionLoc, mvp);
 
 
 	glm::mat4  ModelMatrix = glm::mat4{
@@ -558,8 +525,8 @@ void test()
 				spot2 = 1;
 			}
 
-			boundingBoxes[spot].max = animation[i].bomb.getPos() + dimensions[3];
-			boundingBoxes[spot].min = animation[i].bomb.getPos() - dimensions[3];
+			//boundingBoxes[spot].max = animation[i].bomb.getPos() + dimensions[3];
+			//boundingBoxes[spot].min = animation[i].bomb.getPos() - dimensions[3];
 			//if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[spot2]))//checks whether we hit the other person
 			//{
 			//	//std::cout << "score" << std::endl;
@@ -619,8 +586,8 @@ void test()
 	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
 
-	boundingBoxes[1].max = animation[0].getPos() + dimensions[1];
-	boundingBoxes[1].min = animation[0].getPos() - dimensions[1];
+	//boundingBoxes[1].max = animation[0].getPos() + dimensions[1];
+	//boundingBoxes[1].min = animation[0].getPos() - dimensions[1];
 
 }
 
@@ -834,7 +801,8 @@ void handleEvents(float dt)
 		Collision check = object[0].checkCollision(&object[i]);
 		if (check.status == true)
 		{
-			object[0].fastCollisionFix(check, dt);
+			std::cout << "Collision!" << std::endl;
+			//object[0].fastCollisionFix(check, dt);
 		}
 	}
 }
