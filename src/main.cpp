@@ -164,22 +164,22 @@ void makeMatricies()
 	);
 	up = glm::cross(right, direction);
 
-	if (keydown['w'])
+	if (KEYBOARD_INPUT->IsKeyDown('w'))
 	{
 		position += direction *  speed;
 	}
 	// Move backward
-	if (keydown['s'])
+	if (KEYBOARD_INPUT->IsKeyDown('s'))
 	{
 		position -= direction *  speed;
 	}
 	// Strafe right
-	if (keydown['d'])
+	if (KEYBOARD_INPUT->IsKeyDown('d'))
 	{
 		position += right *  speed;
 	}
 	// Strafe left
-	if (keydown['a'])
+	if (KEYBOARD_INPUT->IsKeyDown('a'))
 	{
 		position -= right *  speed;
 	}
@@ -647,37 +647,37 @@ void characterInput(PlayerObject *player, controller conPlayer)
 	tempVel = player->getVel();;
 	Coords stick = conPlayer.getLeftStick();
 	//std::cout << stick.x << "   " << stick.y << std::endl;
-	if (keydown['j'] || stick.y > -0.1)
+	if (KEYBOARD_INPUT->IsKeyDown('j') || stick.y > -0.1)
 	{
 		player->addPos(glm::vec3(playerSpeed, 0.0f, 0.0f));
 		//	std::cout << "left" << std::endl;
 	}
-	if (keydown['l'] || stick.y < 0.1)
+	if (KEYBOARD_INPUT->IsKeyDown('l') || stick.y < 0.1)
 	{
 		player->addPos(glm::vec3(-playerSpeed, 0.0f, 0.0f));
 		//	std::cout << "right" << std::endl;
 	}
-	if (keydown['u'])
+	if (KEYBOARD_INPUT->IsKeyDown('u'))
 	{
 		player->addPos(glm::vec3(0.0f, playerSpeed, 0.0f));
 	}
-	if (keydown['o'])
+	if (KEYBOARD_INPUT->IsKeyDown('o'))
 	{
 		player->addPos(glm::vec3(0.0f, -playerSpeed, 0.0f));
 	}
-	if (keydown['i'] || stick.x > 0.1)
+	if (KEYBOARD_INPUT->IsKeyDown('i') || stick.x > 0.1)
 	{
 		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed));
 		//	std::cout << "up" << std::endl;
 	}
-	if (keydown['k'] || stick.x < -0.1)
+	if (KEYBOARD_INPUT->IsKeyDown('k') || stick.x < -0.1)
 	{
 		player->addPos(glm::vec3(0.0f, 0.0f, -playerSpeed));
 		//	std::cout << "down" << std::endl;
 	}
 
 
-	if (keydown[32] || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
+	if (KEYBOARD_INPUT->IsKeyDown(32) || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
 	{
 		player->charge += 0.03;
 
@@ -762,32 +762,32 @@ void processInputs()
 	}
 	//fg ht ry
 
-	if (keydown['3'])
+	if (KEYBOARD_INPUT->CheckPressEvent('3'))
 		selected = false;
-	if (keydown['4'])
+	if (KEYBOARD_INPUT->CheckPressEvent('4'))
 		selected = true;
 
-	if (keydown['f'])
+	if (KEYBOARD_INPUT->IsKeyDown('f'))
 	{
 		UI_pos.x -= playerSpeed;
 	}
-	if (keydown['h'])
+	if (KEYBOARD_INPUT->IsKeyDown('h'))
 	{
 		UI_pos.x += playerSpeed;
 	}
-	if (keydown['t'])
+	if (KEYBOARD_INPUT->IsKeyDown('t'))
 	{
 		UI_pos.y += playerSpeed;
 	}
-	if (keydown['g'])
+	if (KEYBOARD_INPUT->IsKeyDown('g'))
 	{
 		UI_pos.y -= playerSpeed;
 	}
-	if (keydown['y'])
+	if (KEYBOARD_INPUT->IsKeyDown('y'))
 	{
 		UI_pos.z += playerSpeed;
 	}
-	if (keydown['r'])
+	if (KEYBOARD_INPUT->IsKeyDown('r'))
 	{
 		UI_pos.z -= playerSpeed;
 	}
@@ -806,11 +806,11 @@ void processInputs()
 		cameraLock = !cameraLock;
 	}
 
-	if (keydown['1'])
+	if (KEYBOARD_INPUT->IsKeyDown('1'))
 	{
 		initialFoV += 0.05f;
 	}
-	if (keydown['2'])
+	if (KEYBOARD_INPUT->IsKeyDown('2'))
 	{
 		initialFoV -= 0.05f;
 	}
