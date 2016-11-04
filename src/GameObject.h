@@ -23,13 +23,30 @@ public:
 	Loader & getBaseLoader() { return obj; }
 	GLuint const* getVAO() { return uiVAO; }	// To be removed probably
 
-private:
-	Loader obj;
+	//setters and getters
+	void setPos(glm::vec3 const & _set);
+	void setVel(glm::vec3 const & _set);
+	void setAcc(glm::vec3 const & _set);
+	void setRot(glm::vec3 const & _set);
+
+	void addPos(glm::vec3 const & _set);
+	void addVel(glm::vec3 const & _set);
+	void addAcc(glm::vec3 const & _set);
+	void addRot(glm::vec3 const & _set);
+
+	glm::vec3 const & getPos() const ;
+	glm::vec3 const & getVel() const ;
+	glm::vec3 const & getAcc() const ;
+	glm::vec3 const & getRot() const ;
+
+protected:
 	glm::vec3 pos;
 	glm::vec3 vel;
 	glm::vec3 acc;
 	glm::vec3 rot;
 
+private:
+	Loader obj;
 	bool isEnvironment;
 
 	GLuint uiVAO[1];
@@ -57,11 +74,27 @@ public:
 
 	void update(float deltaTime);
 
-private:
+protected:
 	// Set the base pose as the default animation
 	void setBaseAnim(char const* basePosePath);
 
-private:
+protected:
 	std::vector<Animation> animations;
 	int currentAnim;
+};
+
+
+class PlayerObject : public AnimatedObject
+{
+public:
+	PlayerObject(char const* basePosePath, char * texData, char const* bombPath, char * bombTex, int _temp);
+	PlayerObject();
+	GameObject bomb;
+	int temp;//temp variable to tell me what bounding box to use for the bomb. will be replaced when the bounding boxes are added to class.
+	bool bombThrow;
+	float bombTimer;
+	int score;
+	float charge;
+	int lives;
+	int controllerState;
 };
