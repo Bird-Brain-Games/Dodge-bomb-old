@@ -22,8 +22,7 @@ void lerp(T &p0, T &p1, T &pe, float t)
 	{
 	pe[count] = (1.0f - t) * p0[count] + p1[count] * t; 
 	}
-}
-
+}/*
 
 class Collision
 {
@@ -51,4 +50,4 @@ bool Collision::collisionAABB(boundingBox p0, boundingBox p1, bool _calc = false
 glm::vec3 Collision::getResult()
 {
 	return result;
-}
+}*/
