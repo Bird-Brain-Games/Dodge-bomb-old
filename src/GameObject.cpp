@@ -29,7 +29,7 @@ GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimensio
 	loadBaseObject(filePath);
 	bindTexture(texData);
 	isEnvironment = false;
-	dimension = dimension;
+	dimension = _dimension;
 	scale = glm::vec3(1.0f);
 }
 
