@@ -193,7 +193,7 @@ void makeMatricies()
 
 }
 void* ptr;
-float scale = 1;
+float scale = 1.0;
 
 /*
 Binds the object data to the stuff, i can't really remember exactly what it does
@@ -220,7 +220,7 @@ void initScene()
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
 	animation[0].setMass(0.5f);
-	//animation[0].useGravity(true);
+	animation[0].useGravity(true);
 
 	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
@@ -793,13 +793,13 @@ void handleEvents(float dt)
 	}
 
 	// Collision
-	for (int i = 0; i < object.size(); i++)
+	for (int i = 0; i < 2; i++)
 	{
-		Collision check = animation[0].checkCollision(&object[i]);
+		Collision check = animation[i].checkCollision(&object[0]);
 		if (check.status == true)
 		{
 			std::cout << "Collision!" << std::endl;
-			object[0].fastCollisionFix(check, dt);
+			animation[i].fastCollisionFix(check, dt);
 		}
 	}
 }

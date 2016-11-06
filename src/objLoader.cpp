@@ -65,7 +65,7 @@ bool Loader::load(char const* fileName)
 		}
 		else if (strcmp(line, "f") == 0)
 		{
-			std::cout << strcmp(line, "f") << std::endl;
+			//std::cout << strcmp(line, "f") << std::endl;
 			unsigned int vertexIndex[3], UVindex[3], normalIndex[3];
 
 			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n",
