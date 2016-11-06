@@ -7,6 +7,8 @@ GameObject::GameObject()
 {
 	isEnvironment = false;
 	textureUnit = 0;
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 }
 
 GameObject::GameObject(char const* filePath)
@@ -14,6 +16,8 @@ GameObject::GameObject(char const* filePath)
 	loadBaseObject(filePath);
 	isEnvironment = false;
 	textureUnit = 0;
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 }
 
 GameObject::GameObject(char const* filePath, char * texData)
@@ -22,6 +26,8 @@ GameObject::GameObject(char const* filePath, char * texData)
 	bindTexture(texData);
 	isEnvironment = false;
 	textureUnit = 0;
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 }
 
 void GameObject::loadBaseObject(char const* filePath)
@@ -191,4 +197,5 @@ PlayerObject::PlayerObject()
 	charge = 0;
 	lives = 2;
 	temp = NULL;
+
 }

@@ -198,6 +198,7 @@ void makeMatricies()
 void* ptr;
 float scale = 1;
 
+
 /*
 Binds the object data to the stuff, i can't really remember exactly what it does
 but it allocates in memory for the object and stuff, so that's good.
@@ -422,6 +423,13 @@ void test()
 	else
 		animation[0].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
 
+	if (aabb.collisionAABB(boundingBoxes[3], boundingBoxes[2]) == true)
+	{
+		//std::cout << "collison!!" << std::endl;
+	}
+	else
+		animation[1].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
+
 
 	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -464,9 +472,9 @@ void test()
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
 	rotationMatrix = glm::mat4{
-		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
@@ -483,9 +491,9 @@ void test()
 	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 
 	rotationMatrix = glm::mat4{
-		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
@@ -647,9 +655,10 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 void characterInput(PlayerObject *player, controller conPlayer)
 {
 	glm::vec3 tempVel;
-	tempVel = player->getVel();;
+	tempVel = player->getVel();
 	Coords stick = conPlayer.getLeftStick();
 	//std::cout << stick.x << "   " << stick.y << std::endl;
+
 	if (keydown['j'] || stick.y > -0.1)
 	{
 		player->addPos(glm::vec3(playerSpeed, 0.0f, 0.0f));
@@ -679,6 +688,29 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//	std::cout << "down" << std::endl;
 	}
 
+
+	stick = conPlayer.getRightStick();
+	//std::cout << stick.x << "   " << stick.y << std::endl;
+
+	if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
+	{
+		float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
+		std::cout << angle << std::endl;
+		player->setRot(glm::vec3(0.0f, angle, 0.0f));
+		//	std::cout << "left" << std::endl;
+	}
+
+
+	player->addVel(player->getAcc());
+	player->addPos(player->getVel());
+
+
+
+
+	if (conPlayer.conButton(XINPUT_GAMEPAD_A) && aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]))
+	{
+		player->addPos(glm::vec3(0.0f, 1.0f, 0.0f));
+	}
 
 	if (keydown[32] || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
 	{
@@ -734,6 +766,7 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		player->bombTimer += dt;
 		player->charge = 0;
 	}
+
 	//if (player.z > tempZ)
 	//{
 	//	animate = true;
@@ -765,10 +798,10 @@ void processInputs()
 	}
 	//fg ht ry
 
-	if (keydown['3'])
-		selected = false;
-	if (keydown['4'])
-		selected = true;
+	//if (keydown['3'])
+	//	selected = false;
+	//if (keydown['4'])
+	//	selected = true;
 
 	if (keydown['f'])
 	{
@@ -818,14 +851,14 @@ void processInputs()
 		cameraLock = !cameraLock;
 	}
 
-	if (keydown['1'])
-	{
-		initialFoV += 0.05f;
-	}
-	if (keydown['2'])
-	{
-		initialFoV -= 0.05f;
-	}
+	//if (keydown['1'])
+	//{
+	//	initialFoV += 0.05f;
+	//}
+	//if (keydown['2'])
+	//{
+	//	initialFoV -= 0.05f;
+	//}
 
 }
 
@@ -941,7 +974,7 @@ int main(int argc, char **argv)
 
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutCreateWindow("window title");//
+	glutCreateWindow("window title");
 
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
