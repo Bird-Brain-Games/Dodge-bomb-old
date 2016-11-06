@@ -218,12 +218,16 @@ void initScene()
 	animation[0] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
-	animation[0].setPos(glm::vec3(-5.0, 10.0, 0.0));
+	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
+	animation[0].setMass(0.5f);
+	//animation[0].useGravity(true);
 
 	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
-	animation[0].setPos(glm::vec3(-5.0, 10.0, 0.0));
+	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
+	animation[1].setMass(0.5f);
+	//animation[1].useGravity(true);
 
 	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg", glm::vec3(41.5f, 0.05f, 41.5f)));
 	object[0].bindObjectData(GL_STATIC_DRAW);
@@ -407,14 +411,6 @@ void test()
 	glm::mat4 ViewMatrix = getViewMatrix();
 	glm::mat4 identity = glm::mat4(1.0);
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
-
-	for (int i = 0; i < object.size(); i++)
-	{
-		object[i].draw(iModelViewProjectionLoc, mvp);
-	}
-
-
-	mvp = ProjectionMatrix * ViewMatrix * identity;
 
 	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
 		1.0f, 0.0f, 0.0f, 0.0f,
@@ -758,7 +754,8 @@ void processInputs()
 	}
 	if (KEYBOARD_INPUT->IsKeyDown('r'))
 	{
-		UI_pos.z -= playerSpeed;
+		animation[0].setPos(glm::vec3(0.0, 10.0, -5.0));
+		animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
 	}
 
 	if (KEYBOARD_INPUT->CheckPressEvent('z'))
@@ -796,13 +793,13 @@ void handleEvents(float dt)
 	}
 
 	// Collision
-	for (int i = 1; i < object.size(); i++)
+	for (int i = 0; i < object.size(); i++)
 	{
-		Collision check = object[0].checkCollision(&object[i]);
+		Collision check = animation[0].checkCollision(&object[i]);
 		if (check.status == true)
 		{
 			std::cout << "Collision!" << std::endl;
-			//object[0].fastCollisionFix(check, dt);
+			object[0].fastCollisionFix(check, dt);
 		}
 	}
 }
@@ -840,7 +837,8 @@ void TimerCallbackFunction(int value)
 	{
 		o.update(dt);
 	}
-	//animation[0].update(dt);
+	animation[0].update(dt);
+	animation[1].update(dt);
 
 	//	handle all events /////////////////////////////////////////////////////
 	handleEvents(dt);
