@@ -3,16 +3,20 @@
 #include "glm\gtc\type_ptr.hpp"
 #include "GLM\gtx\projection.hpp"
 #include <stdexcept>
+#include "math.h"
 
 GameObject::GameObject()
 {
+	boundingBox = Loader("obj\\cube.obj");
 	isEnvironment = false;
 	scale = glm::vec3(1.0f);
 	dimension = glm::vec3(1.0f);
+	setMass(1.0f);
 }
 
 GameObject::GameObject(char const* filePath)
 {
+	boundingBox = Loader("obj\\cube.obj");
 	loadBaseObject(filePath);
 	isEnvironment = false;
 	scale = glm::vec3(1.0f);
@@ -21,6 +25,7 @@ GameObject::GameObject(char const* filePath)
 
 GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimension)
 {
+	boundingBox = Loader("obj\\cube.obj");
 	loadBaseObject(filePath);
 	bindTexture(texData);
 	isEnvironment = false;
@@ -35,6 +40,11 @@ void GameObject::loadBaseObject(char const* filePath)
 
 void GameObject::update(float deltaTime)
 {
+	if (gravity)
+	{
+		addForce(deltaTime, GRAVITY);
+	}
+
 	setVel(getVel() + (getAcc() * deltaTime));
 	setPos(getPos() + (getVel() * deltaTime));
 }
@@ -46,6 +56,19 @@ void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 	glBindVertexArray(uiVAO[0]);
 	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
+
+	// If debugging bounding, draw bounding boxes
+	if (DEBUG_BOUNDING)
+	{
+		glBindVertexArray(uiVAO[1]);
+		glm::mat4 newMvp = mvp * glm::mat4(
+			dimension.x * 2.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, dimension.y * 2.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, dimension.z * 2.0f, 0.0f,
+			1.0f, 1.0f, 1.0f, 1.0f);
+		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+		glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
+	}
 }
 
 void GameObject::addForce(float dt, glm::vec3 const& force, ForceMode mode)
@@ -124,8 +147,8 @@ void GameObject::fastCollisionFix(Collision const& col, float deltaTime)
 
 void GameObject::bindObjectData(GLuint DrawType)
 {
-	glGenVertexArrays(1, uiVAO);
-	glGenBuffers(3, uiVBO);
+	glGenVertexArrays(2, uiVAO);
+	glGenBuffers(6, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
@@ -143,6 +166,25 @@ void GameObject::bindObjectData(GLuint DrawType)
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+
+	if (DEBUG_BOUNDING)
+	{
+		glBindVertexArray(uiVAO[1]);
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
+		glBufferData(GL_ARRAY_BUFFER, boundingBox.getVertices().size() * sizeof(glm::vec3), boundingBox.getVertices().data(), DrawType);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+		glBufferData(GL_ARRAY_BUFFER, boundingBox.getUVs().size() * sizeof(glm::vec2), boundingBox.getUVs().data(), DrawType);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[5]);
+		glBufferData(GL_ARRAY_BUFFER, boundingBox.getNormals().size() * sizeof(glm::vec3), boundingBox.getNormals().data(), DrawType);
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	}
 }
 
 void GameObject::bindTexture(char* filePath)
@@ -166,6 +208,7 @@ void GameObject::setVel(glm::vec3 const & _set) { vel = _set; };
 void GameObject::setAcc(glm::vec3 const & _set) { acc = _set; };
 void GameObject::setRot(glm::vec3 const & _set) { rot = _set; };
 void GameObject::setMass(float _mass) { mass = _mass; }
+void GameObject::useGravity(bool _gravity) { gravity = _gravity; }
 
 void GameObject::addPos(glm::vec3 const & _set) { pos += _set; };
 void GameObject::addVel(glm::vec3 const & _set) { vel += _set; };
@@ -178,7 +221,12 @@ glm::vec3 const & GameObject::getAcc() const { return  acc; };
 glm::vec3 const & GameObject::getRot() const { return  rot; };
 
 
-//////////ANIMATED OBJECT
+
+
+
+
+
+//////////ANIMATED OBJECT /////////////////////////////////////////////////////
 
 AnimatedObject::AnimatedObject()
 	: GameObject()
@@ -237,8 +285,8 @@ Animation const& AnimatedObject::getAnim(int pose) const
 void AnimatedObject::update(float deltaTime)
 {
 	GameObject::update(deltaTime);
-	animations.at(currentAnim).update(deltaTime, getBaseLoader());
-	GameObject::bindObjectData(GL_DYNAMIC_DRAW);
+	animations[currentAnim].update(deltaTime, getBaseLoader());
+	//GameObject::bindObjectData(GL_DYNAMIC_DRAW);
 }
 
 void AnimatedObject::setCurrentAnim(int newAnimIndex)

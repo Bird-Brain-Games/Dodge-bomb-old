@@ -58,10 +58,12 @@ public:
 	void addAcc(glm::vec3 const & _set);
 	void addRot(glm::vec3 const & _set);
 
-	glm::vec3 const & getPos() const ;
-	glm::vec3 const & getVel() const ;
-	glm::vec3 const & getAcc() const ;
-	glm::vec3 const & getRot() const ;
+	glm::vec3 const & getPos() const;
+	glm::vec3 const & getVel() const;
+	glm::vec3 const & getAcc() const;
+	glm::vec3 const & getRot() const;
+
+	void useGravity(bool _gravity = true);
 
 protected:
 	// Physics variables
@@ -74,12 +76,15 @@ protected:
 	glm::vec3 dimension;
 	glm::vec3 scale;
 
+	bool gravity = false;
+
 private:
 	Loader obj;
+	Loader boundingBox;
 	bool isEnvironment;
 
-	GLuint uiVAO[1];
-	GLuint uiVBO[3];
+	GLuint uiVAO[2];
+	GLuint uiVBO[6];
 	GLuint texHandle[1];
 	GLuint texSampler[1];
 };
@@ -126,6 +131,7 @@ class PlayerObject : public AnimatedObject
 public:
 	PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension);
 	PlayerObject();
+
 	Bomb bomb;
 	bool bombThrow;
 	float bombTimer;

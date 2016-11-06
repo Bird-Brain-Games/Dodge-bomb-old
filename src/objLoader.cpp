@@ -235,17 +235,29 @@ void Animation::update(float deltaTime, Loader & base)
 			nextPose = 0;
 		}
 	}
+	//std::vector<glm::vec3>::const_iterator end = poseList.at(currentPose).getVertices().end();
+	//std::vector<glm::vec3>::const_iterator p0 = poseList.at(currentPose).getVertices().begin();
+	//std::vector<glm::vec3>::const_iterator p1 = poseList.at(nextPose).getVertices().begin();
 
-	std::vector<glm::vec3> newVertices =
+	//int iterator = 0;
+	//while(p0 != end)
+	//{ 
+	//	//base.setVertex(iterator, (1.0f - time) * *p0 + *p1 * time);
+	//	iterator++;
+	//	p0++;
+	//	p1++;
+	//}
+
+	/*std::vector<glm::vec3> newVertices =
 		vectorLerp<glm::vec3>
 		(
 			poseList.at(currentPose).getVertices(),
 			poseList.at(nextPose).getVertices(),
 			time
-		);
+		);*/
 
-	base.setVertices
+	/*base.setVertices
 	(
 		newVertices
-	);
+	);*/
 }

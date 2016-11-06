@@ -1,5 +1,9 @@
 #pragma once
 #include "glm\glm.hpp"
+
+glm::vec3 const GRAVITY(0.0f, -0.001f, 0.0f);
+bool const DEBUG_BOUNDING = true;
+
 struct boundingBox
 {
 	glm::vec3 max;
