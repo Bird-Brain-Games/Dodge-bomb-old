@@ -102,5 +102,8 @@ public:
 	int lives;
 	int controllerState;
 
+	glm::vec3 direction;
+
+	int frame = 0;
 
 };

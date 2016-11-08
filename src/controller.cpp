@@ -40,7 +40,12 @@ Coords controller::getRightStick()
 	XInputGetState(m_ControllerHandle, &m_CurrentState);
 
 	Coords result;
-	if ((int)sqrt((float)(m_CurrentState.Gamepad.sThumbRY * m_CurrentState.Gamepad.sThumbRY) + (m_CurrentState.Gamepad.sThumbRX * m_CurrentState.Gamepad.sThumbRX)) > XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
+	if (
+		(int)sqrt((float)
+		(m_CurrentState.Gamepad.sThumbRY * m_CurrentState.Gamepad.sThumbRY)
+		+ 
+		(m_CurrentState.Gamepad.sThumbRX * m_CurrentState.Gamepad.sThumbRX)) 
+		> XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
 	{
 		result.x = (float)m_CurrentState.Gamepad.sThumbRX / (float)MAXVALUE;
 		result.y = (float)m_CurrentState.Gamepad.sThumbRY / (float)MAXVALUE;

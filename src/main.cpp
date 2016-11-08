@@ -29,6 +29,8 @@ controller p1(0);
 controller p2(1);
 
 
+float incriment = 0.1;
+
 float x_bomb = -2.0f;
 
 // Defines and Core variables
@@ -104,8 +106,7 @@ float dt;
 float sphereTimer = 0;
 UINT testing;
 
-CShader vertShader;
-CShader fragShader;
+
 vector<GameObject> object;
 vector<GameObject> UI;
 vector<glm::vec3> dimensions;
@@ -115,8 +116,8 @@ PlayerObject animation[2];
 
 Collision aabb;
 
-CShader shVertex, shFragment;
-CShaderProgram spMain;
+ShaderLoader shVertex, shFragment, testVert, testFrag;
+ShaderProgram spMain, testShader;
 
 float time = 0.0f;
 
@@ -289,9 +290,20 @@ void initScene()
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
 	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
 
+
+	//testVert.loadShader("shaders\\shaderLerp.vert", GL_VERTEX_SHADER);
+	//testFrag.loadShader("shaders\\shaderLerp.frag", GL_FRAGMENT_SHADER);
+	//
+	//testShader.createProgram();
+	//testShader.addShader(&testVert);
+	//testShader.addShader(&testFrag);
+	//
+	//testShader.linkProgram();
+	//testShader.useProgram();
+
 	spMain.createProgram();
-	spMain.addShaderToProgram(&shVertex);
-	spMain.addShaderToProgram(&shFragment);
+	spMain.addShader(&shVertex);
+	spMain.addShader(&shFragment);
 
 	spMain.linkProgram();
 	spMain.useProgram();
@@ -344,8 +356,6 @@ void DisplayCallbackFunction(void)
 	glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
 	drawUI();
 
-
-
 	//glViewport(0, windowHeight / 2, windowWidth, windowHeight / 2);
 	//glMatrixMode(GL_PROJECTION);
 	//glLoadIdentity();
@@ -360,10 +370,13 @@ void DisplayCallbackFunction(void)
 	//glMatrixMode(GL_MODELVIEW);
 	//glLoadIdentity();
 
+
 	glutSwapBuffers();
 
 }
+
 glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
+
 void drawUI()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -589,42 +602,62 @@ void test()
 		//}
 
 	}
+	for (int i = 0; i < 2; i++)
+	{
+		PlayerObject *player = &animation[i];
+		if (player->charge > 0)
+		{
+			glm::vec3 temp;
+			temp = glm::normalize(player->direction);
+			player->bomb.setVel(glm::vec3(temp* player->charge));
 
+			while (player->bombTimer < 1.51)
+			{
+				player->bomb.addPos(player->bomb.getVel());
+				player->bombTimer += 0.1;
+				std::cout << player->bombTimer << std::endl;
+				if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
+				{
 
-	//glBindVertexArray(uiVAO[0]);
-	//mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.0f, x_bomb, 0.0f, 1.0f);
-	////glBindSampler(0, texture_sampler[0]);
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+					player->bombTimer = 1.6;
 
+				}
+				if (player->bombTimer > incriment)
+				{
+					incriment += 0.1;
+					int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+					int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
 
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
+					glUniform1i(sampler, 0);
+					glActiveTexture(GL_TEXTURE0);
 
-	//glBindVertexArray(uiVAO[1]);
+					makeMatricies();
+					glm::mat4 ProjectionMatrix = getProjectionMatrix();
+					glm::mat4 ViewMatrix = getViewMatrix();
+					glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+						0.4f, 0.0f, 0.0f, 0.0f,
+						0.0f, 0.4f, 0.0f, 0.0f,
+						0.0f, 0.0f, 0.4f, 0.0f,
+						player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
 
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+					player->bomb.draw(iModelViewProjectionLoc, mvp);
+					if (incriment > 1.5)
+						incriment = 0.1;
+				}
 
-	////character player 1
-	//mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+				boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
+				boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
+				animation[i].bomb.addVel(glm::vec3(0.0f, -0.05f, 0.0f));
+			}
 
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
+			player->bomb.setPos(player->getPos());
+			player->bomb.setVel(glm::vec3(0));
+			player->bombTimer = 0;
 
-	//glBindVertexArray(uiVAO[2]);
-	////character player 2
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[3]);
-	//mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	character2_pos.x, character2_pos.y, character2_pos.z, 1.0f);
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
-
+			boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
+			boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
+		}
+	}
 	boundingBoxes[1].max = animation[0].getPos() + dimensions[1];
 	boundingBoxes[1].min = animation[0].getPos() - dimensions[1];
 
@@ -652,22 +685,42 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 	keydown[key] = false;
 }
 
+
+
 void characterInput(PlayerObject *player, controller conPlayer)
 {
+	bool tempBool = false;
 	glm::vec3 tempVel;
 	tempVel = player->getVel();
 	Coords stick = conPlayer.getLeftStick();
 	//std::cout << stick.x << "   " << stick.y << std::endl;
-
+	float temp = 1;
+	bool sprint = conPlayer.conButton(XINPUT_GAMEPAD_B);
 	if (keydown['j'] || stick.y > -0.1)
 	{
-		player->addPos(glm::vec3(playerSpeed, 0.0f, 0.0f));
+		player->addPos(glm::vec3(playerSpeed*stick.y, 0.0f, 0.0f));
 		//	std::cout << "left" << std::endl;
+		if (sprint)
+		{
+			if (player->getVel().x == 0.0f && player->frame > 10)
+			{
+				player->addVel(glm::vec3(stick.y * playerSpeed / temp, 0.0f, 0.0f));
+				tempBool = true;
+			}
+		}
 	}
 	if (keydown['l'] || stick.y < 0.1)
 	{
-		player->addPos(glm::vec3(-playerSpeed, 0.0f, 0.0f));
+		player->addPos(glm::vec3(playerSpeed*stick.y, 0.0f, 0.0f));
 		//	std::cout << "right" << std::endl;
+		if (sprint)
+		{
+			if (player->getVel().x == 0.0f && player->frame > 10)
+			{
+				player->addVel(glm::vec3(stick.y * playerSpeed / temp, 0.0f, 0.0f));
+				tempBool = true;
+			}
+		}
 	}
 	if (keydown['u'])
 	{
@@ -679,23 +732,42 @@ void characterInput(PlayerObject *player, controller conPlayer)
 	}
 	if (keydown['i'] || stick.x > 0.1)
 	{
-		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed));
+		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed*stick.x));
+		if (sprint)
+		{
+			if (player->getVel().z == 0.0f && player->frame > 10)
+			{
+				player->addVel(glm::vec3(0.0f, 0.0f, stick.x * playerSpeed / temp));
+				tempBool = true;
+			}
+		}
 		//	std::cout << "up" << std::endl;
 	}
 	if (keydown['k'] || stick.x < -0.1)
 	{
-		player->addPos(glm::vec3(0.0f, 0.0f, -playerSpeed));
+		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed*stick.x));
 		//	std::cout << "down" << std::endl;
+		if (sprint)
+		{
+			if (player->getVel().z == 0.0f && player->frame > 10)
+			{
+				player->addVel(glm::vec3(0.0f, 0.0f, stick.x * playerSpeed / temp));
+				tempBool = true;
+			}
+		}
 	}
 
-
+	if (tempBool == true)
+	{
+		player->frame = 0;
+	}
 	stick = conPlayer.getRightStick();
 	//std::cout << stick.x << "   " << stick.y << std::endl;
 
 	if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
 	{
+		player->direction = glm::vec3(stick.y, 1.0f, stick.x);
 		float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
-		std::cout << angle << std::endl;
 		player->setRot(glm::vec3(0.0f, angle, 0.0f));
 		//	std::cout << "left" << std::endl;
 	}
@@ -704,7 +776,16 @@ void characterInput(PlayerObject *player, controller conPlayer)
 	player->addVel(player->getAcc());
 	player->addPos(player->getVel());
 
+	player->frame++;
 
+	if (player->getVel() != glm::vec3(0.0f))
+	{
+		player->addVel(-player->getVel()*temp / 4.0f);
+		if (player->frame == 6)
+		{
+			player->setVel(glm::vec3(0.0f));
+		}
+	}
 
 
 	if (conPlayer.conButton(XINPUT_GAMEPAD_A) && aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]))
@@ -712,55 +793,18 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		player->addPos(glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
+
 	if (keydown[32] || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
 	{
 		player->charge += 0.03;
 
-		//glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
-
-		//direction = glm::normalize(direction);
-		//player->bomb.setVel(glm::vec3(direction* player->charge));
-
-		//while (player->bombTimer < 1.5)
-		//{
-		//	player->bomb.addPos(player->bomb.getVel());
-		//	player->bombTimer += dt;
-		//	std::cout << player->bom. << std::endl;
-		//	if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
-		//	{
-		//		int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-		//		int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-
-		//		//glUniform1i(sampler, 0);
-		//		//glActiveTexture(GL_TEXTURE0);
-
-		//		makeMatricies();
-		//		glm::mat4 ProjectionMatrix = getProjectionMatrix();
-		//		glm::mat4 ViewMatrix = getViewMatrix();
-		//		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		//			1.0f, 0.0f, 0.0f, 0.0f,
-		//			0.0f, 1.0f, 0.0f, 0.0f,
-		//			0.0f, 0.0f, 1.0f, 0.0f,
-		//			player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
-
-		//		player->bomb.draw(iModelViewProjectionLoc, mvp);
-		//	}
-		//	boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
-		//	boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
-		//}
-
-		//player->bomb.setPos(player->getPos());
-		//player->bomb.setVel(glm::vec3(0));
-		//player->bombTimer = 0;
-
-		//boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
-		//boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
 	}
 	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false)
 	{
-		glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
-		direction = glm::normalize(direction);
-		player->bomb.setVel(glm::vec3(direction* player->charge));
+		glm::vec3 temp;
+		temp = glm::normalize(player->direction);
+		//std::cout << player->direction.x << " " << player->direction.y << std::endl;
+		player->bomb.setVel(glm::vec3(temp* player->charge));
 		player->bombThrow = true;
 		player->bomb.setPos(player->getPos());
 		player->bombTimer += dt;
