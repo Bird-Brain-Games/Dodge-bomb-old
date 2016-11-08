@@ -21,7 +21,7 @@ public:
 	Coords getLeftStick();//gets the right stick. returns a coord variable (a structure with two floats in it. x and y)
 	Coords getRightStick();//gets the left stick. returns a coord variable (a structure with two floats in it. x and y)
 	/**
-	*XINPUT_GAMEPAD_DPAD_UP	0x0001
+	*XINPUT_GAMEPAD_DPAD_UP		0x0001
 	*XINPUT_GAMEPAD_DPAD_DOWN	0x0002
 	*XINPUT_GAMEPAD_DPAD_LEFT	0x0004
 	*XINPUT_GAMEPAD_DPAD_RIGHT	0x0008
