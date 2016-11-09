@@ -224,8 +224,11 @@ void initScene()
 	animation[1].setMass(0.5f);
 	animation[1].useGravity(true);
 
-	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object.push_back(GameObject("obj\\desk.obj", "img\\desk (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
 	object[0].bindObjectData(GL_STATIC_DRAW);
+
+	object.push_back(GameObject("obj\\room.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object[1].bindObjectData(GL_STATIC_DRAW);
 
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
@@ -371,7 +374,7 @@ void drawUI()
 
 void test()
 {
-
+	glm::mat4  ModelMatrix;
 
 
 
@@ -391,23 +394,38 @@ void test()
 	glm::mat4 identity = glm::mat4(1.0);
 	glm::mat4 mvp = ProjectionMatrix * ViewMatrix * identity;
 
-	mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		object[0].getPos().x, object[0].getPos().y, object[0].getPos().z, 1.0f);
 
+		
+	ModelMatrix	= glm::mat4(
+		2.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.5f, 0.0f,
+		object[0].getPos().x, object[0].getPos().y - 1.0f, object[0].getPos().z, 1.0f);
+
+	rotationMatrix = glm::mat4{
+		cos(90*degToRad), 0.0f, sin(90 * degToRad), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(90 * degToRad), 0.0f, cos(90 * degToRad), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 	object[0].draw(iModelViewProjectionLoc, mvp);
 
+	mvp = ProjectionMatrix * ViewMatrix * identity;
 
-	glm::mat4  ModelMatrix = glm::mat4{
+	object[1].draw(iModelViewProjectionLoc, mvp);
+
+
+	ModelMatrix = glm::mat4{
 		scale, 0.0f, 0.0f, 0.0f,
 		0.0f, scale, 0.0f, 0.0f,
 		0.0f, 0.0f, scale, 0.0f,
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
-	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -5.0f, 0.0f));
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
 
 	rotationMatrix = glm::mat4{
 		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
@@ -554,58 +572,7 @@ void test()
 					player->bomb.draw(iModelViewProjectionLoc, mvp);
 					increment += increment;
 				}
-				//if (player->charge > 0)
-				//{
-				//	glm::vec3 temp;
-				//	//std::cout << player->direction.x << " " << player->direction.y << " " << player->direction.z << " " << std::endl;
-				//	temp = glm::normalize(player->direction);
-				//	temp.y = 1.0f;
-				////	std::cout << temp.x << " " << temp.y << " " << temp.z << " " << std::endl;
-				//	player->bomb.setVel(glm::vec3(temp* player->charge));
-				//	while (player->bombTimer < 1.51)
-				//	{
-				//		player->bomb.addPos(player->bomb.getVel());
-				//		player->bombTimer += 0.1;
-				//	//	std::cout << player->bombTimer << std::endl;
-				//		if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
-				//		{
-
-				//			player->bombTimer = 1.6;
-
-				//		}
-				//		if (player->bombTimer > incriment)
-				//		{
-				//			incriment += 0.1;
-				//			int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-				//			int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
-
-				//			glUniform1i(sampler, 0);
-				//			glActiveTexture(GL_TEXTURE0);
-
-				//			makeMatricies();
-				//			glm::mat4 ProjectionMatrix = getProjectionMatrix();
-				//			glm::mat4 ViewMatrix = getViewMatrix();
-				//			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-				//				1.0f, 0.0f, 0.0f, 0.0f,
-				//				0.0f, 1.0f, 0.0f, 0.0f,
-				//				0.0f, 0.0f, 1.0f, 0.0f,
-				//				player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
-
-				//			player->bomb.draw(iModelViewProjectionLoc, mvp);
-				//			if (incriment > 1.5)
-				//				incriment = 0.1;
-				//		}
-
-				//		boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
-				//		boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
-				//		animation[i].bomb.addVel(glm::vec3(0.0f, -0.05f, 0.0f));
-				//	}
-
-				//	player->bomb.setPos(player->getPos());
-				//	player->bomb.setVel(glm::vec3(0));
-				//	player->bombTimer = 0;
-
-				//}
+			
 			}
 		}
 	}
@@ -700,7 +667,7 @@ void characterInput(PlayerObject *player, controller conPlayer)
 				player->setVel(glm::vec3(0.0f));
 			}
 		}
-
+		player->frame += dt;
 
 		//if (conPlayer.conButton(XINPUT_GAMEPAD_A) && player->checkCollision(&object[0]).status)
 		//{
