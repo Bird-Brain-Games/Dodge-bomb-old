@@ -348,9 +348,9 @@ Bomb::Bomb(char const* basePosePath, char * texData)
 	exploding = false;
 	maxExplodeTimer = 2.0f;
 	currentExplodeTimer = 0.0f;
-	maxFuseTimer = 0.0f;
-	currentFuseTimer = 2.0f;
-	explosion = GameObject("..\\obj\\ball.obj");
+	maxFuseTimer = 2.0f;
+	currentFuseTimer = 0.0f;
+	explosion = GameObject("obj\\ball.obj");
 }
 
 void Bomb::update(float dt)
@@ -367,7 +367,7 @@ void Bomb::update(float dt)
 			exploding = false;
 			active = false;
 			tVal = 0.0f;
-			setPos(glm::vec3(0.0f, -10.0f, 0.0f));
+			setPos(glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 		else
 		{

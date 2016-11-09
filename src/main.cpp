@@ -799,7 +799,10 @@ void TimerCallbackFunction(int value)
 	{
 		o.update(dt);
 		o.bomb.update(dt);
+		
 	}
+	glm::vec3 bomb1Pos = animation[0].bomb.getPos();
+	std::cout << "X: " << bomb1Pos.x << " Y: " << bomb1Pos.y << " Z: " << bomb1Pos.z << std::endl;
 
 
 	//	handle all events /////////////////////////////////////////////////////
