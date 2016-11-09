@@ -635,6 +635,11 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 
 void characterInput(PlayerObject *player, controller conPlayer)
 {
+	if (conPlayer.conButton(XINPUT_GAMEPAD_LEFT_SHOULDER))
+	{
+		player->reset();
+	}
+
 	if (player->lives > 0)
 	{
 		bool tempBool = false;
@@ -854,6 +859,13 @@ void handleEvents(float dt)
 	{
 		animation[0].bomb.explode();
 		animation[1].takeDamage(1);
+	}
+
+	check = animation[1].bomb.checkCollision(&animation[0]);
+	if (check.status == true && !animation[0].isInvincible())
+	{
+		animation[1].bomb.explode();
+		animation[0].takeDamage(1);
 	}
 }
 

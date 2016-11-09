@@ -170,6 +170,9 @@ public:
 
 	void takeDamage(int damage);
 
+	// Debug command for resetting character
+	void reset();
+
 	Bomb bomb;
 	int score;
 	float charge;
