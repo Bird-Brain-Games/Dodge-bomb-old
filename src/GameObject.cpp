@@ -49,6 +49,7 @@ void GameObject::loadBaseObject(char const* filePath)
 
 void GameObject::update(float deltaTime)
 {
+	this;
 	if (gravity)
 	{
 		addForce(deltaTime, GRAVITY);
@@ -373,6 +374,7 @@ Bomb::Bomb(char const* basePosePath, char * texData)
 	maxFuseTimer = 2.0f;
 	currentFuseTimer = 0.0f;
 	explosion = GameObject("obj\\ball.obj");
+	explosion.bindObjectData();
 }
 
 void Bomb::update(float dt)
@@ -424,7 +426,7 @@ void Bomb::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 void Bomb::launch(glm::vec3 pos, glm::vec3 dir, float charge)
 {
 	setPos(pos);
-	setVel(dir * charge * 10.0f);//* glm::vec3(0.0f, 5.0f, 0.0f));
+	setVel(dir * charge * 30.0f);//* glm::vec3(0.0f, 5.0f, 0.0f));
 	//setAcc(glm::vec3(0.0f, 5.0f, 0.0f));
 	active = true;
 	useGravity(true);
