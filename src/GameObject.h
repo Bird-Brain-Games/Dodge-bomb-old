@@ -131,6 +131,7 @@ public:
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
 	void launch(glm::vec3 position, glm::vec3 direction, float charge);
 	void explode();
+	void reset();
 
 	Collision checkCollision(GameObject * other);
 
@@ -160,6 +161,8 @@ public:
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
 
 	void throwBomb(glm::vec3 direction);
+
+	void drawArc(glm::vec3 direction);
 
 	Bomb bomb;
 	int score;

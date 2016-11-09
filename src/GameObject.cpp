@@ -351,6 +351,11 @@ void PlayerObject::throwBomb(glm::vec3 direction)
 	charge = 0.0f;
 }
 
+void PlayerObject::drawArc(glm::vec3 direction)
+{
+
+}
+
 
 Bomb::Bomb()
 	: GameObject()
@@ -457,6 +462,21 @@ void Bomb::explode()
 		currentFuseTimer = 0.0f;
 		currentExplodeTimer = 0.0f;
 	}
+}
+
+void Bomb::reset()
+{
+	setPos(glm::vec3(0.0f));
+	setVel(glm::vec3(0.0f));
+	setAcc(glm::vec3(0.0f));
+
+	useGravity(false);
+
+	currentFuseTimer = 0.0f;
+	currentExplodeTimer = 0.0f;
+
+	exploding = false;
+	active = false;
 }
 
 bool Bomb::isExploding() const { return exploding; }
