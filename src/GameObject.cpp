@@ -386,6 +386,13 @@ void PlayerObject::takeDamage(int damage)
 	lives-= damage;
 }
 
+void PlayerObject::reset()
+{
+	lives = 2;
+	setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+	useGravity(true);
+}
+
 ////////////////////////////////////////////////////////////  BOMB OBJECT  ////
 Bomb::Bomb()
 	: GameObject()
@@ -397,13 +404,15 @@ Bomb::Bomb(char const* basePosePath, char * texData, int side)
 	: GameObject(basePosePath, texData, glm::vec3(0.44f, 0.47f, 0.44f))
 {
 	reset();
-	maxExplodeTimer = 2.0f;
+	maxExplodeTimer = 0.5f;
 	maxFuseTimer = 2.0f;
 
+	glm::vec3 explDimension(2.0f);
+
 	if (side == 0)
-		explosion = GameObject("obj\\ball.obj", "img\\redTex.png", glm::vec3(1.0f));
+		explosion = GameObject("obj\\ball.obj", "img\\redTex.png", explDimension);
 	else
-		explosion = GameObject("obj\\ball.obj", "img\\blueTex.png", glm::vec3(1.0f));
+		explosion = GameObject("obj\\ball.obj", "img\\blueTex.png", explDimension);
 
 	explosion.bindObjectData();
 }
@@ -466,8 +475,7 @@ Collision Bomb::checkCollision(GameObject * other)
 	{
 		if (isExploding())
 		{
-			col = other->checkCollision(getPos(), dimension * tVal);
-			col.overlap = -col.overlap;
+			col = explosion.checkCollision(other);
 		}
 		else
 		{
