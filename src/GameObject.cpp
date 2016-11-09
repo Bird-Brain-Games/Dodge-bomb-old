@@ -2,6 +2,7 @@
 #include <IL\ilut.h>
 #include "glm\gtc\type_ptr.hpp"
 #include "GLM\gtx\projection.hpp"
+#include "GLUT\glut.h"
 #include <stdexcept>
 #include "math.h"
 
@@ -105,6 +106,11 @@ void GameObject::setScale(glm::vec3 newScale, bool changeBoundingBox)
 
 Collision GameObject::checkCollision(GameObject * other)
 {
+	return checkCollision(other->getPos(), other->dimension);
+}
+
+Collision GameObject::checkCollision(glm::vec3 otherPos, glm::vec3 otherDimensions)
+{
 	Collision check;
 
 	float thisMaxX = getPos().x + dimension.x;	// getPos() - width / 2
@@ -114,12 +120,12 @@ Collision GameObject::checkCollision(GameObject * other)
 	float thisMaxZ = getPos().z + dimension.z;
 	float thisMinZ = getPos().z - dimension.z;
 
-	float otherMaxX = other->getPos().x + other->dimension.x;	// getPos() - width / 2
-	float otherMinX = other->getPos().x - other->dimension.x;
-	float otherMaxY = other->getPos().y + other->dimension.y;
-	float otherMinY = other->getPos().y - other->dimension.y;
-	float otherMaxZ = other->getPos().z + other->dimension.z;
-	float otherMinZ = other->getPos().z - other->dimension.z;
+	float otherMaxX = otherPos.x + otherDimensions.x;	// getPos() - width / 2
+	float otherMinX = otherPos.x - otherDimensions.x;
+	float otherMaxY = otherPos.y + otherDimensions.y;
+	float otherMinY = otherPos.y - otherDimensions.y;
+	float otherMaxZ = otherPos.z + otherDimensions.z;
+	float otherMinZ = otherPos.z - otherDimensions.z;
 
 	check.overlap.x = thisMaxX - otherMinX;
 	check.overlap.y = thisMaxY - otherMinY;
@@ -133,7 +139,7 @@ Collision GameObject::checkCollision(GameObject * other)
 	if (getVel() == glm::vec3(0.0f))	// if both stationary, we have a problem
 		check.normal = glm::vec3(0.0f, 0.0f, 0.0f);
 	else
-		check.normal = glm::normalize(other->getPos() - getPos());
+		check.normal = glm::normalize(otherPos - getPos());
 
 	return check;
 }
@@ -303,8 +309,6 @@ PlayerObject::PlayerObject(char const* basePosePath, char * texData, glm::vec3 _
 	: AnimatedObject(basePosePath, texData, _dimension),
 	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png")
 {
-	bombThrow = false;
-	bombTimer = 0;
 	score = 0;
 	charge = 0;
 	lives = 2;
@@ -313,11 +317,21 @@ PlayerObject::PlayerObject(char const* basePosePath, char * texData, glm::vec3 _
 PlayerObject::PlayerObject()
 	: AnimatedObject()
 {
-	bombThrow = false;
-	bombTimer = 0;
 	score = 0;
 	charge = 0;
 	lives = 2;
+}
+
+void PlayerObject::bindObjectData(GLuint DrawType)
+{
+	GameObject::bindObjectData(DrawType);
+	bomb.bindObjectData();
+}
+
+void PlayerObject::throwBomb(glm::vec3 direction)
+{
+	bomb.launch(getPos(), direction, charge);
+	charge = 0.0f;
 }
 
 
@@ -330,5 +344,96 @@ Bomb::Bomb()
 Bomb::Bomb(char const* basePosePath, char * texData)
 	: GameObject(basePosePath, texData, glm::vec3(0.44f, 0.47f, 0.44f))
 {
-
+	active = false;
+	exploding = false;
+	maxExplodeTimer = 2.0f;
+	currentExplodeTimer = 0.0f;
+	maxFuseTimer = 0.0f;
+	currentFuseTimer = 2.0f;
+	explosion = GameObject("..\\obj\\ball.obj");
 }
+
+void Bomb::update(float dt)
+{
+	GameObject::update(dt);
+
+	// Increment the explosion timer
+	if (isExploding())
+	{
+		currentExplodeTimer += dt;
+		if (currentExplodeTimer >= maxExplodeTimer)
+		{
+			currentExplodeTimer = 0.0f;
+			exploding = false;
+			active = false;
+			tVal = 0.0f;
+			setPos(glm::vec3(0.0f, -10.0f, 0.0f));
+		}
+		else
+		{
+			tVal = (currentExplodeTimer / maxExplodeTimer);
+		}
+	}
+	else if (isActive())
+	{
+		currentFuseTimer += dt;
+		if (currentFuseTimer >= maxFuseTimer)
+		{
+			explode();
+			currentFuseTimer = 0.0f;
+		}
+	}
+}
+
+void Bomb::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
+{
+	// if exploding, draw the solid sphere
+	if (isExploding())
+	{
+		explosion.draw(iModelViewProjectionLoc, mvp);
+	}
+	else
+	{
+		GameObject::draw(iModelViewProjectionLoc, mvp);
+	}
+}
+
+void Bomb::launch(glm::vec3 pos, glm::vec3 dir, float charge)
+{
+	setPos(pos);
+	setVel(dir * charge);
+	setAcc(glm::vec3(0.0f, 1.0f, 0.0f));
+	active = true;
+	useGravity(true);
+}
+
+Collision Bomb::checkCollision(GameObject * other)
+{
+	Collision col;
+	if (isActive())
+	{
+		if (isExploding())
+		{
+			col = other->checkCollision(getPos(), dimension * tVal);
+			col.overlap = -col.overlap;
+		}
+		else
+		{
+			col = GameObject::checkCollision(other);
+		}	
+	}
+
+	return col;
+}
+
+void Bomb::explode()
+{
+	exploding = true;
+	setVel(glm::vec3(0.0f));
+	setAcc(glm::vec3(0.0f));
+	explosion.setPos(getPos());
+	useGravity(false);
+}
+
+bool Bomb::isExploding() const { return exploding; }
+bool Bomb::isActive() const { return active; }

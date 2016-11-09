@@ -43,6 +43,7 @@ public:
 
 	// Collision
 	Collision checkCollision(GameObject * other);
+	Collision checkCollision(glm::vec3 otherPos, glm::vec3 otherDimensions);
 	void fastCollisionFix(Collision const& col, float deltaTime);
 
 	//setters and getters
@@ -123,6 +124,28 @@ class Bomb : public GameObject
 public:
 	Bomb();
 	Bomb(char const* basePosePath, char * texData);
+
+	void update(float dt);
+	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
+	void launch(glm::vec3 position, glm::vec3 direction, float charge);
+	void explode();
+
+	Collision checkCollision(GameObject * other);
+
+	bool isExploding() const;
+	bool isActive() const;
+
+private:
+	bool active;
+	bool exploding;
+	float currentFuseTimer;
+	float maxFuseTimer;
+	float currentExplodeTimer;
+	float maxExplodeTimer;
+	float tVal;
+
+	// Explosion variables
+	GameObject explosion;
 };
 
 
@@ -132,9 +155,11 @@ public:
 	PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension);
 	PlayerObject();
 
+	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
+
+	void throwBomb(glm::vec3 direction);
+
 	Bomb bomb;
-	bool bombThrow;
-	float bombTimer;
 	int score;
 	float charge;
 	int lives;
