@@ -104,6 +104,6 @@ public:
 
 	glm::vec3 direction;
 
-	int frame = 0;
+	float frame = 0;
 
 };
