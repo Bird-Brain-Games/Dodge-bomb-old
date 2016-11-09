@@ -407,7 +407,7 @@ Bomb::Bomb(char const* basePosePath, char * texData, int side)
 	maxExplodeTimer = 0.5f;
 	maxFuseTimer = 2.0f;
 
-	glm::vec3 explDimension(2.0f);
+	glm::vec3 explDimension(3.0f);
 
 	if (side == 0)
 		explosion = GameObject("obj\\ball.obj", "img\\redTex.png", explDimension);
@@ -462,7 +462,8 @@ void Bomb::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 void Bomb::launch(glm::vec3 pos, glm::vec3 dir, float charge)
 {
 	setPos(pos);
-	setVel(dir * charge * 30.0f);//* glm::vec3(0.0f, 5.0f, 0.0f));
+	setVel(dir * charge * 65.0f);//* glm::vec3(0.0f, 5.0f, 0.0f));
+	setVel(getVel() * glm::vec3(1.0f, 0.5f, 1.0f));
 	//setAcc(glm::vec3(0.0f, 5.0f, 0.0f));
 	active = true;
 	useGravity(true);

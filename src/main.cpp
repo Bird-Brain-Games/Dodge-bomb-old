@@ -209,22 +209,22 @@ void initScene()
 	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
 	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
-	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot.jpg", 0, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
-	animation[0].setMass(0.5f);
+	animation[0].setMass(1.5f);
 	animation[0].useGravity(true);
 
 
-	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot2.jpg", 1, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
-	animation[1].setMass(0.5f);
+	animation[1].setMass(1.5f);
 	animation[1].useGravity(true);
 
-	object.push_back(GameObject("obj\\desk.obj", "img\\desk (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object.push_back(GameObject("obj\\desk.obj", "img\\desk (diffuse).png", glm::vec3(41.5f, 1.0f, 41.5f)));
 	object[0].bindObjectData(GL_STATIC_DRAW);
 
 	object.push_back(GameObject("obj\\room.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
@@ -290,8 +290,8 @@ void initScene()
 	glEnable(GL_DEPTH_TEST);
 	glClearDepth(1.0);
 
-	animation[0].bomb.setMass(0.1f);
-	animation[1].bomb.setMass(0.1f);
+	animation[0].bomb.setMass(0.3f);
+	animation[1].bomb.setMass(0.3f);
 
 }
 
@@ -558,7 +558,7 @@ void test()
 
 				glUniform1i(sampler, 0);
 				glActiveTexture(GL_TEXTURE0);
-				if (time > increment)
+				if (time > increment /*&& increment < 0.6f*/)
 				{
 					makeMatricies();
 					glm::mat4 ProjectionMatrix = getProjectionMatrix();
@@ -570,7 +570,8 @@ void test()
 						player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
 
 					player->bomb.draw(iModelViewProjectionLoc, mvp);
-					increment += increment;
+					increment += 0.05f;
+					
 				}
 			
 			}
@@ -678,10 +679,10 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && !player->bomb.isActive())
 		{
 			if (player->charge == 0)
-				player->charge = 0.3;
+				player->charge = 0.15;
 
 			if (player->charge < 1.0)
-				player->charge += 0.03;
+				player->charge += 0.015;
 
 		}
 		if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
