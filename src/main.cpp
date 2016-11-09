@@ -28,7 +28,7 @@ glm::mat4 rotationMatrix;
 controller p1(0);
 controller p2(1);
 
-
+GameObject *line;
 float incriment = 0.1;
 
 float x_bomb = -2.0f;
@@ -109,6 +109,7 @@ UINT testing;
 
 vector<GameObject> object;
 vector<GameObject> UI;
+
 vector<glm::vec3> dimensions;
 // chest, robot, floor, robot2
 vector<boundingBox> boundingBoxes;
@@ -207,7 +208,7 @@ void initScene()
 	UI.push_back(GameObject("obj\\number.obj"));
 
 	dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
-	dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
+	dimensions.push_back(glm::vec3(5.1f*scale, 5.3f*scale, 2.4f*scale));// Robot
 	dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
 	dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
@@ -231,11 +232,11 @@ void initScene()
 	temp.min = animation[0].bomb.getPos() - dimensions[3];
 	boundingBoxes.push_back(temp);
 
-	animation[0] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 4);
+	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot.jpg", "obj\\bomb.obj", "img\\black.png", 4);
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
 
-	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", "obj\\bomb.obj", "img\\bPileDiffuse.png", 5);
+	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot2.jpg", "obj\\bomb.obj", "img\\black.png", 5);
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 
@@ -255,8 +256,14 @@ void initScene()
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
 
+	animation[0].bomb.bindObjectData();
+	animation[1].bomb.bindObjectData();
+
 	UI[0].bindObjectData();
 	UI[1].bindObjectData();
+
+	line = new GameObject("obj//direction.obj", "img//black.png");
+	line->bindObjectData();
 
 	char sTemp[] = "img\\num\\0.png";
 	for (int count = 0; count < 10; count++)
@@ -385,7 +392,7 @@ void drawUI()
 void test()
 {
 
-
+	
 
 	if (aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]) == true)
 	{
@@ -442,17 +449,35 @@ void test()
 		0.0f, 0.0f, scale, 0.0f,
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(2.0f, -5.3f, 0.0f));
+
 	rotationMatrix = glm::mat4{
 		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
 
+	glm::mat4 directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	line->draw(iModelViewProjectionLoc, mvp);
+
 	ModelMatrix = ModelMatrix * rotationMatrix;
+
 
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
-		animation[0].draw(iModelViewProjectionLoc, mvp);
+	{
+	animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+	}
 
 
 	ModelMatrix = glm::mat4{
@@ -461,34 +486,37 @@ void test()
 	  0.0f, 0.0f, scale, 0.0f,
 	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 
+	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -5.3f, 0.0f));
+	//directionT = ModelMatrix;
+
 	rotationMatrix = glm::mat4{
 		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
 
+
+	directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	line->draw(iModelViewProjectionLoc, mvp);
+
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[1].lives > 0)
-		animation[1].draw(iModelViewProjectionLoc, mvp);
-	////glm::mat4 ModelMatrix = glm::mat4{
-	////	1.0, 0.0f, 0.0f, 0.0f,
-	////	0.0f, cos(90), -sin(90), 0.0f,
-	////	0.0f, sin(90), cos(90), 0.0f,
-	////	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+	{
+		animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
-	//glm::mat4  ModelMatrix = glm::mat4{
-	//scale, 0.0f, 0.0f, 0.0f,
-	//0.0f, scale, 0.0f, 0.0f,
-	//0.0f, 0.0f, scale, 0.0f,
-	//character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.0f, -3.0f, 0.0f, 1.0f);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+	}
+	
 
 
 
@@ -504,9 +532,9 @@ void test()
 			animation[i].bombTimer += dt;
 
 			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-				1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 1.0f, 0.0f,
+				4.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 4.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 4.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
 			//sphere.x++;
@@ -597,9 +625,9 @@ void test()
 					glm::mat4 ProjectionMatrix = getProjectionMatrix();
 					glm::mat4 ViewMatrix = getViewMatrix();
 					glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-						0.4f, 0.0f, 0.0f, 0.0f,
-						0.0f, 0.4f, 0.0f, 0.0f,
-						0.0f, 0.0f, 0.4f, 0.0f,
+						1.0f, 0.0f, 0.0f, 0.0f,
+						0.0f, 1.0f, 0.0f, 0.0f,
+						0.0f, 0.0f, 1.0f, 0.0f,
 						player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
 
 					player->bomb.draw(iModelViewProjectionLoc, mvp);
