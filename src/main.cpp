@@ -29,6 +29,8 @@ glm::mat4 rotationMatrix;
 controller p1(0);
 controller p2(1);
 
+GameObject *line;
+float incriment = 0.1;
 
 float x_bomb = -2.0f;
 
@@ -65,7 +67,7 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 44.4000092;
 
-float playerSpeed = 0.4f; // the players speed. used to how fast animation needs to be.
+float playerSpeed = 24.0f; // the players speed. used to how fast animation needs to be.
 
 float speed = 0.3f; // 1 units / second
 float mouseSpeed = 0.005f;
@@ -104,16 +106,16 @@ float dt;
 float sphereTimer = 0;
 UINT testing;
 
-CShader vertShader;
-CShader fragShader;
+
 vector<GameObject> object;
 vector<GameObject> UI;
+
 PlayerObject animation[2];
 
 Collision aabb;
 
-CShader shVertex, shFragment;
-CShaderProgram spMain;
+ShaderLoader shVertex, shFragment, testVert, testFrag;
+ShaderProgram spMain, testShader;
 
 float time = 0.0f;
 
@@ -195,14 +197,6 @@ void makeMatricies()
 void* ptr;
 float scale = 1.0;
 
-/*
-Binds the object data to the stuff, i can't really remember exactly what it does
-but it allocates in memory for the object and stuff, so that's good.
-- VAO
-- index of VAO
-- VBO
-- object being bound
-*/
 
 
 void initScene()
@@ -235,8 +229,14 @@ void initScene()
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
 
+	animation[0].bomb.bindObjectData();
+	animation[1].bomb.bindObjectData();
+
 	UI[0].bindObjectData();
 	UI[1].bindObjectData();
+
+	line = new GameObject("obj//direction.obj", "img//black.png");
+	line->bindObjectData();
 
 	char sTemp[] = "img\\num\\0.png";
 	for (int count = 0; count < 10; count++)
@@ -258,34 +258,27 @@ void initScene()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_SMOOTH);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_SMOOTH);
 
+
+
+	testVert.loadShader("shaders\\shader_colour.vert", GL_VERTEX_SHADER);
+	testFrag.loadShader("shaders\\shader_colour.frag", GL_FRAGMENT_SHADER);
+
+	testShader.createProgram();
+	testShader.addShader(&testVert);
+	testShader.addShader(&testFrag);
+
+	testShader.linkProgram();
+	testShader.useProgram();
+
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
-	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
+	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);	
 
 	spMain.createProgram();
-	spMain.addShaderToProgram(&shVertex);
-	spMain.addShaderToProgram(&shFragment);
+	spMain.addShader(&shVertex);
+	spMain.addShader(&shFragment);
 
 	spMain.linkProgram();
 	spMain.useProgram();
-
-
-
-
-	//vertShader.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
-	//fragShader.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
-
-
-	//testing = glCreateProgram();
-
-	//glAttachShader(testing, vertShader.getID());
-	//glAttachShader(testing, fragShader.getID());
-
-	//glLinkProgram(testing);
-
-	//GLint isLinked = 0;
-	//glLinkProgram(testing);
-	//glGetProgramiv(testing, GL_LINK_STATUS, (int *)&isLinked);
-	//glUseProgram(testing);
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -316,26 +309,12 @@ void DisplayCallbackFunction(void)
 	glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
 	drawUI();
 
-
-
-	//glViewport(0, windowHeight / 2, windowWidth, windowHeight / 2);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
-	////test();
-
-	//glViewport(0, windowHeight/2, windowWidth, windowHeight / 2);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrtho(0, windowWidth, 0, windowHeight, -1.0, 1.0);//you can use negative nears and fars because of the way its math works.
-	//drawUI();
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-
 	glutSwapBuffers();
 
 }
+
 glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
+
 void drawUI()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -395,6 +374,13 @@ void test()
 	//else
 	//	animation[0].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
 
+	if (aabb.collisionAABB(boundingBoxes[3], boundingBoxes[2]) == true)
+	{
+		//std::cout << "collison!!" << std::endl;
+	}
+	else
+		animation[1].addPos(glm::vec3(0.0f, -0.1f, 0.0f));
+
 
 	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -428,17 +414,35 @@ void test()
 		0.0f, 0.0f, scale, 0.0f,
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(2.0f, -5.3f, 0.0f));
+
 	rotationMatrix = glm::mat4{
-		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
+
+	glm::mat4 directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	line->draw(iModelViewProjectionLoc, mvp);
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
+
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
-		animation[0].draw(iModelViewProjectionLoc, mvp);
+	{
+	animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+	}
 
 
 	ModelMatrix = glm::mat4{
@@ -447,34 +451,37 @@ void test()
 	  0.0f, 0.0f, scale, 0.0f,
 	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 
+	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -5.3f, 0.0f));
+	//directionT = ModelMatrix;
+
 	rotationMatrix = glm::mat4{
-		cos(rotation.y), 0.0f, sin(rotation.y), 0.0f,
+		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(rotation.y), 0.0f, cos(rotation.y), 0.0f,
+		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
+
+
+	directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	line->draw(iModelViewProjectionLoc, mvp);
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[1].lives > 0)
-		animation[1].draw(iModelViewProjectionLoc, mvp);
-	////glm::mat4 ModelMatrix = glm::mat4{
-	////	1.0, 0.0f, 0.0f, 0.0f,
-	////	0.0f, cos(90), -sin(90), 0.0f,
-	////	0.0f, sin(90), cos(90), 0.0f,
-	////	character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+	{
+		animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
-	//glm::mat4  ModelMatrix = glm::mat4{
-	//scale, 0.0f, 0.0f, 0.0f,
-	//0.0f, scale, 0.0f, 0.0f,
-	//0.0f, 0.0f, scale, 0.0f,
-	//character_pos.x,  character_pos.y,  character_pos.z,  1.0f };
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.0f, -3.0f, 0.0f, 1.0f);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+	}
+	
 
 
 
@@ -496,6 +503,7 @@ void test()
 			if (animation[i].lives > 0)
 				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
 
+				animation[i].bombThrow = false;
 			
 	}
 		//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
@@ -503,43 +511,62 @@ void test()
 		//	x_bomb -= 0.3f;
 		//}
 
+	for (int i = 0; i < 2; i++)
+	{
+		PlayerObject *player = &animation[i];
+		if (player->charge > 0)
+		{
+			glm::vec3 temp;
+			std::cout << player->direction.x << " " << player->direction.y << " " << player->direction.z << " " << std::endl;
+			temp = glm::normalize(player->direction);
+			temp.y = 1.0f;
+			std::cout << temp.x << " " << temp.y << " " << temp.z << " " << std::endl;
+			player->bomb.setVel(glm::vec3(temp* player->charge));
+			while (player->bombTimer < 1.51)
+			{
+				player->bomb.addPos(player->bomb.getVel());
+				player->bombTimer += 0.1;
+			//	std::cout << player->bombTimer << std::endl;
+				if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
+				{
 
-	//glBindVertexArray(uiVAO[0]);
-	//mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.0f, x_bomb, 0.0f, 1.0f);
-	////glBindSampler(0, texture_sampler[0]);
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[0]);
+					player->bombTimer = 1.6;
 
+				}
+				if (player->bombTimer > incriment)
+				{
+					incriment += 0.1;
+					int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+					int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
 
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[0].getVertex().size());
+					glUniform1i(sampler, 0);
+					glActiveTexture(GL_TEXTURE0);
 
-	//glBindVertexArray(uiVAO[1]);
+					makeMatricies();
+					glm::mat4 ProjectionMatrix = getProjectionMatrix();
+					glm::mat4 ViewMatrix = getViewMatrix();
+					glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+						1.0f, 0.0f, 0.0f, 0.0f,
+						0.0f, 1.0f, 0.0f, 0.0f,
+						0.0f, 0.0f, 1.0f, 0.0f,
+						player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
 
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[1]);
+					player->bomb.draw(iModelViewProjectionLoc, mvp);
+					if (incriment > 1.5)
+						incriment = 0.1;
+				}
 
-	////character player 1
-	//mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+				boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
+				boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
+				animation[i].bomb.addVel(glm::vec3(0.0f, -0.05f, 0.0f));
+			}
 
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
+			player->bomb.setPos(player->getPos());
+			player->bomb.setVel(glm::vec3(0));
+			player->bombTimer = 0;
 
-	//glBindVertexArray(uiVAO[2]);
-	////character player 2
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[3]);
-	//mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	character2_pos.x, character2_pos.y, character2_pos.z, 1.0f);
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[1].getVertex().size());
-
-	//boundingBoxes[1].max = animation[0].getPos() + dimensions[1];
-	//boundingBoxes[1].min = animation[0].getPos() - dimensions[1];
+		}
+	}
 
 }
 
@@ -562,98 +589,104 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 	KEYBOARD_INPUT->SetActive(key, false);
 }
 
+
+
 void characterInput(PlayerObject *player, controller conPlayer)
 {
+	bool tempBool = false;
 	glm::vec3 tempVel;
-	tempVel = player->getVel();;
+	tempVel = player->getVel();
 	Coords stick = conPlayer.getLeftStick();
+	glm::vec2 sNormalized = glm::normalize(glm::vec2(stick.x, stick.y));
 	//std::cout << stick.x << "   " << stick.y << std::endl;
-	if (KEYBOARD_INPUT->IsKeyDown('j') || stick.y > -0.1)
+	float temp = 1;
+	bool sprint = conPlayer.conButton(XINPUT_GAMEPAD_B);
+	if (stick.y < -0.1 || stick.y > 0.1)
 	{
-		player->addPos(glm::vec3(playerSpeed, 0.0f, 0.0f));
+		player->addPos(glm::vec3(dt * playerSpeed*stick.y, 0.0f, 0.0f));
 		//	std::cout << "left" << std::endl;
+		if (sprint)
+		{
+			if (player->getVel().x == 0.0f && player->frame > 1)
+			{
+				player->addVel(glm::vec3( sNormalized.y * playerSpeed * 3, 0.0f, 0.0f));
+				tempBool = true;
+			}
+		}
 	}
-	if (KEYBOARD_INPUT->IsKeyDown('l') || stick.y < 0.1)
+	if (stick.x < -0.1 || stick.x > 0.1)
 	{
-		player->addPos(glm::vec3(-playerSpeed, 0.0f, 0.0f));
-		//	std::cout << "right" << std::endl;
-	}
-	if (KEYBOARD_INPUT->IsKeyDown('u'))
-	{
-		player->addPos(glm::vec3(0.0f, playerSpeed, 0.0f));
-	}
-	if (KEYBOARD_INPUT->IsKeyDown('o'))
-	{
-		player->addPos(glm::vec3(0.0f, -playerSpeed, 0.0f));
-	}
-	if (KEYBOARD_INPUT->IsKeyDown('i') || stick.x > 0.1)
-	{
-		player->addPos(glm::vec3(0.0f, 0.0f, playerSpeed));
+		player->addPos(glm::vec3(0.0f, 0.0f, dt * playerSpeed*stick.x));
+		if (sprint)
+		{
+			if (player->getVel().z == 0.0f && player->frame > 1)
+			{
+				player->addVel(glm::vec3(0.0f, 0.0f, sNormalized.x * playerSpeed * 3));
+				tempBool = true;
+			}
+		}
 		//	std::cout << "up" << std::endl;
 	}
-	if (KEYBOARD_INPUT->IsKeyDown('k') || stick.x < -0.1)
+
+	if (tempBool == true)
 	{
-		player->addPos(glm::vec3(0.0f, 0.0f, -playerSpeed));
-		//	std::cout << "down" << std::endl;
+		player->frame = 0;
+	}
+	stick = conPlayer.getRightStick();
+	//std::cout << stick.x << "   " << stick.y << std::endl;
+
+	if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
+	{
+		player->direction = glm::vec3(stick.y, 0.0f, stick.x);
+		float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
+		player->setRot(glm::vec3(0.0f, angle, 0.0f));
+		//	std::cout << "left" << std::endl;
 	}
 
 
-	if (KEYBOARD_INPUT->IsKeyDown(32) || conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER))
+	player->update(dt);
+
+	player->frame += dt;
+
+	if (player->getVel() != glm::vec3(0.0f))
 	{
-		player->charge += 0.03;
+		player->addVel(-player->getVel() * dt * 6.0f);
+		if (player->frame >= 0.2)
+		{
+			player->setVel(glm::vec3(0.0f));
+		}
+	}
 
-		//glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
 
-		//direction = glm::normalize(direction);
-		//player->bomb.setVel(glm::vec3(direction* player->charge));
+	if (conPlayer.conButton(XINPUT_GAMEPAD_A) && aabb.collisionAABB(boundingBoxes[1], boundingBoxes[2]))
+	{
+		player->addPos(glm::vec3(0.0f, 1.0f, 0.0f));
+	}
 
-		//while (player->bombTimer < 1.5)
-		//{
-		//	player->bomb.addPos(player->bomb.getVel());
-		//	player->bombTimer += dt;
-		//	std::cout << player->bom. << std::endl;
-		//	if (aabb.collisionAABB(boundingBoxes[player->temp], boundingBoxes[2])) // checks whether we hit the floor
-		//	{
-		//		int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
-		//		int sampler = glGetUniformLocation(spMain.getProgramID(), "gSampler");
 
-		//		//glUniform1i(sampler, 0);
-		//		//glActiveTexture(GL_TEXTURE0);
+	if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && player->bombThrow == false)
+	{
+		if (player->charge == 0)
+			player->charge = 0.3;
 
-		//		makeMatricies();
-		//		glm::mat4 ProjectionMatrix = getProjectionMatrix();
-		//		glm::mat4 ViewMatrix = getViewMatrix();
-		//		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-		//			1.0f, 0.0f, 0.0f, 0.0f,
-		//			0.0f, 1.0f, 0.0f, 0.0f,
-		//			0.0f, 0.0f, 1.0f, 0.0f,
-		//			player->bomb.getPos().x, player->bomb.getPos().y, player->bomb.getPos().z, 1.0f);
+		if (player->charge < 1.0)
+			player->charge += 0.03;
 
-		//		player->bomb.draw(iModelViewProjectionLoc, mvp);
-		//	}
-		//	boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
-		//	boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
-		//}
-
-		//player->bomb.setPos(player->getPos());
-		//player->bomb.setVel(glm::vec3(0));
-		//player->bombTimer = 0;
-
-		//boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
-		//boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
 	}
 	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
 		&& !player->bomb.isActive())
 	{
-		glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
-		direction = glm::normalize(direction);
+		glm::vec3 temp;
+		temp = glm::normalize(player->direction);
 		player->throwBomb(direction);
 		/*player->bomb.setVel(glm::vec3(direction* player->charge));
+		player->bomb.setVel(glm::vec3(temp* player->charge));
 		player->bombThrow = true;
 		player->bomb.setPos(player->getPos());
 		player->bombTimer += dt;
 		player->charge = 0;*/
 	}
+
 	//if (player.z > tempZ)
 	//{
 	//	animate = true;
@@ -686,9 +719,9 @@ void processInputs()
 	//fg ht ry
 
 	if (KEYBOARD_INPUT->CheckPressEvent('3'))
-		selected = false;
+	//	selected = false;
 	if (KEYBOARD_INPUT->CheckPressEvent('4'))
-		selected = true;
+	//	selected = true;
 
 	if (KEYBOARD_INPUT->IsKeyDown('f'))
 	{
@@ -731,13 +764,13 @@ void processInputs()
 	}
 
 	if (KEYBOARD_INPUT->IsKeyDown('1'))
-	{
-		initialFoV += 0.05f;
-	}
+	//{
+	//	initialFoV += 0.05f;
+	//}
 	if (KEYBOARD_INPUT->IsKeyDown('2'))
-	{
-		initialFoV -= 0.05f;
-	}
+	//{
+	//	initialFoV -= 0.05f;
+	//}
 
 }
 
@@ -888,7 +921,7 @@ int main(int argc, char **argv)
 
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutCreateWindow("window title");//
+	glutCreateWindow("window title");
 
 	GLenum err = glewInit();
 	if (GLEW_OK != err)

@@ -13,6 +13,8 @@ GameObject::GameObject()
 	scale = glm::vec3(1.0f);
 	dimension = glm::vec3(1.0f);
 	setMass(1.0f);
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 }
 
 GameObject::GameObject(char const* filePath)
@@ -21,6 +23,8 @@ GameObject::GameObject(char const* filePath)
 	loadBaseObject(filePath);
 	isEnvironment = false;
 	scale = glm::vec3(1.0f);
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 	dimension = glm::vec3(1.0f);
 	setMass(1.0f);
 }
@@ -32,6 +36,8 @@ GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimensio
 	bindTexture(texData);
 	isEnvironment = false;
 	dimension = _dimension;
+	acc = glm::vec3(0.0f);
+	vel = glm::vec3(0.0f);
 	scale = glm::vec3(1.0f);
 	setMass(1.0f);
 }
@@ -47,7 +53,6 @@ void GameObject::update(float deltaTime)
 	{
 		addForce(deltaTime, GRAVITY);
 	}
-
 	setVel(getVel() + (getAcc() * deltaTime));
 	setPos(getPos() + (getVel() * deltaTime));
 }
@@ -151,6 +156,15 @@ void GameObject::fastCollisionFix(Collision const& col, float deltaTime)
 	glm::vec3 correction = -glm::proj(col.overlap, getVel());
 	std::cout << "Correction: " << correction.x << ", " << correction.y << std::endl;
 	addPos(-correction * deltaTime);
+}
+
+void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2)
+{
+	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(uiVAO[0]);
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, point1, point2);
 }
 
 void GameObject::bindObjectData(GLuint DrawType)
@@ -293,7 +307,7 @@ Animation const& AnimatedObject::getAnim(int pose) const
 void AnimatedObject::update(float deltaTime)
 {
 	GameObject::update(deltaTime);
-	animations[currentAnim].update(deltaTime, getBaseLoader());
+	//animations.at(currentAnim).update(deltaTime, getBaseLoader());
 	//GameObject::bindObjectData(GL_DYNAMIC_DRAW);
 }
 
@@ -322,6 +336,7 @@ PlayerObject::PlayerObject()
 	score = 0;
 	charge = 0;
 	lives = 2;
+
 }
 
 void PlayerObject::bindObjectData(GLuint DrawType)
