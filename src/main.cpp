@@ -209,7 +209,7 @@ void initScene()
 	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
 	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
-	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot.jpg", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
@@ -217,7 +217,7 @@ void initScene()
 	animation[0].useGravity(true);
 
 
-	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot2.jpg", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
@@ -425,7 +425,8 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
 	{
-		animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		if (!animation[0].isInvincible())
+			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -434,6 +435,7 @@ void test()
 			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
+		
 		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 
@@ -463,7 +465,8 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[1].lives > 0)
 	{
-		animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		if (!animation[1].isInvincible())
+			animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -472,6 +475,7 @@ void test()
 			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
+		
 		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 	
@@ -493,7 +497,7 @@ void test()
 				0.0f, 0.0f, 5.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-			std::cout << animation[i].bomb.getPos().x << " " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
+			//std::cout << animation[i].bomb.getPos().x << " " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
 
 			if (animation[i].lives > 0)
 				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
@@ -841,6 +845,13 @@ void handleEvents(float dt)
 			animation[i].setAcc(glm::vec3(0.0f));
 			animation[i].setVel(animation[i].getVel() * glm::vec3(1.0f, 0.0f, 1.0f));
 		}
+	}
+
+	Collision check = animation[0].bomb.checkCollision(&animation[1]);
+	if (check.status == true && !animation[1].isInvincible())
+	{
+		animation[0].bomb.explode();
+		animation[1].takeDamage(1);
 	}
 }
 
