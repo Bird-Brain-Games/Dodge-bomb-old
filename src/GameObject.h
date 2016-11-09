@@ -18,6 +18,8 @@ public:
 
 	void update(float deltaTime);
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
+	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2);
+
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
 	void bindTexture(char * filePath);

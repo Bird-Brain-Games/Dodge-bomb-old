@@ -50,6 +50,15 @@ void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 	glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
 }
 
+void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2)
+{
+	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(uiVAO[0]);
+	glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawArrays(GL_TRIANGLES, point1, point2);
+}
+
 void GameObject::bindObjectData(GLuint DrawType)
 {
 	glGenVertexArrays(1, uiVAO);
