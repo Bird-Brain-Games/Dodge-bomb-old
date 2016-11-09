@@ -322,13 +322,16 @@ void AnimatedObject::setCurrentAnim(int newAnimIndex)
 	currentAnim = newAnimIndex;
 }
 
-PlayerObject::PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension)
+PlayerObject::PlayerObject(char const* basePosePath, char * texData, int _side, glm::vec3 _dimension)
 	: AnimatedObject(basePosePath, texData, _dimension),
-	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png")
+	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png", _side)
 {
 	score = 0;
 	charge = 0;
 	lives = 2;
+	side = _side;
+	maxiFrames = 3.0f;
+	currentiFrames = maxiFrames;
 }
 
 PlayerObject::PlayerObject()
@@ -337,7 +340,27 @@ PlayerObject::PlayerObject()
 	score = 0;
 	charge = 0;
 	lives = 2;
+	side = 0;
+	maxiFrames = 3.0f;
+	currentiFrames = maxiFrames;
+}
 
+void PlayerObject::update(float dt)
+{
+	AnimatedObject::update(dt);
+
+	if (currentiFrames < maxiFrames)
+	{
+		currentiFrames += dt;
+		std::cout << currentiFrames << std::endl;
+		if (currentiFrames > maxiFrames)
+			currentiFrames = maxiFrames;
+	}
+}
+
+void PlayerObject::setSide(int _side)
+{
+	side = _side;
 }
 
 void PlayerObject::bindObjectData(GLuint DrawType)
@@ -352,28 +375,36 @@ void PlayerObject::throwBomb(glm::vec3 direction)
 	charge = 0.0f;
 }
 
-void PlayerObject::drawArc(glm::vec3 direction)
+bool PlayerObject::isInvincible() const
 {
-
+	return (currentiFrames < maxiFrames);
 }
 
+void PlayerObject::takeDamage(int damage)
+{
+	currentiFrames = 0.0f;
+	lives-= damage;
+}
 
+////////////////////////////////////////////////////////////  BOMB OBJECT  ////
 Bomb::Bomb()
 	: GameObject()
 {
-
+	reset();
 }
 
-Bomb::Bomb(char const* basePosePath, char * texData)
+Bomb::Bomb(char const* basePosePath, char * texData, int side)
 	: GameObject(basePosePath, texData, glm::vec3(0.44f, 0.47f, 0.44f))
 {
-	active = false;
-	exploding = false;
+	reset();
 	maxExplodeTimer = 2.0f;
-	currentExplodeTimer = 0.0f;
 	maxFuseTimer = 2.0f;
-	currentFuseTimer = 0.0f;
-	explosion = GameObject("obj\\ball.obj");
+
+	if (side == 0)
+		explosion = GameObject("obj\\ball.obj", "img\\redTex.png", glm::vec3(1.0f));
+	else
+		explosion = GameObject("obj\\ball.obj", "img\\blueTex.png", glm::vec3(1.0f));
+
 	explosion.bindObjectData();
 }
 
@@ -388,11 +419,7 @@ void Bomb::update(float dt)
 		std::cout << currentExplodeTimer << std::endl;
 		if (currentExplodeTimer >= maxExplodeTimer)
 		{
-			currentExplodeTimer = 0.0f;
-			exploding = false;
-			active = false;
-			tVal = 0.0f;
-			setPos(glm::vec3(0.0f, 1.0f, 0.0f));
+			reset();
 		}
 		else
 		{
@@ -468,7 +495,7 @@ void Bomb::explode()
 
 void Bomb::reset()
 {
-	setPos(glm::vec3(0.0f));
+	setPos(glm::vec3(0.0f, -100.0f, 0.0f));
 	setVel(glm::vec3(0.0f));
 	setAcc(glm::vec3(0.0f));
 
@@ -476,6 +503,7 @@ void Bomb::reset()
 
 	currentFuseTimer = 0.0f;
 	currentExplodeTimer = 0.0f;
+	tVal = 0.0f;
 
 	exploding = false;
 	active = false;

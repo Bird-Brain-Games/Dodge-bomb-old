@@ -125,7 +125,7 @@ class Bomb : public GameObject
 {
 public:
 	Bomb();
-	Bomb(char const* basePosePath, char * texData);
+	Bomb(char const* basePosePath, char * texData, int side);
 
 	void update(float dt);
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
@@ -155,20 +155,30 @@ private:
 class PlayerObject : public AnimatedObject
 {
 public:
-	PlayerObject(char const* basePosePath, char * texData, glm::vec3 _dimension);
+	PlayerObject(char const* basePosePath, char * texData, int _side, glm::vec3 _dimension);
 	PlayerObject();
+
+	void update(float dt);
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
 
 	void throwBomb(glm::vec3 direction);
 
-	void drawArc(glm::vec3 direction);
+	void setSide(int _side);
+
+	bool isInvincible() const;
+
+	void takeDamage(int damage);
 
 	Bomb bomb;
 	int score;
 	float charge;
 	int lives;
 	int controllerState;
+	int side;
+
+	float maxiFrames;
+	float currentiFrames;
 
 	glm::vec3 direction;
 
