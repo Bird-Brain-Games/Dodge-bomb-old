@@ -488,9 +488,9 @@ void test()
 	{
 
 			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-				1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 1.0f, 0.0f,
+				5.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 5.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 5.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
 			if (animation[i].lives > 0)
@@ -642,7 +642,8 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//boundingBoxes[player->temp].max = player->bomb.getPos() + dimensions[3];
 		//boundingBoxes[player->temp].min = player->bomb.getPos() - dimensions[3];
 	}
-	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false)
+	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
+		&& !player->bomb.isActive())
 	{
 		glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
 		direction = glm::normalize(direction);
@@ -752,11 +753,12 @@ void handleEvents(float dt)
 	// Collision
 	for (int i = 0; i < 2; i++)
 	{
-		Collision check = animation[i].checkCollision(&object[0]);
+		Collision check = animation[i].bomb.checkCollision(&object[0]);
 		if (check.status == true)
 		{
 			std::cout << "Collision!" << std::endl;
-			animation[i].fastCollisionFix(check, dt);
+			animation[i].bomb.explode();
+			//animation[i].fastCollisionFix(check, dt);
 		}
 	}
 }
@@ -801,9 +803,6 @@ void TimerCallbackFunction(int value)
 		o.bomb.update(dt);
 		
 	}
-	glm::vec3 bomb1Pos = animation[0].bomb.getPos();
-	std::cout << "X: " << bomb1Pos.x << " Y: " << bomb1Pos.y << " Z: " << bomb1Pos.z << std::endl;
-
 
 	//	handle all events /////////////////////////////////////////////////////
 	handleEvents(dt);

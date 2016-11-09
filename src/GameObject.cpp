@@ -22,6 +22,7 @@ GameObject::GameObject(char const* filePath)
 	isEnvironment = false;
 	scale = glm::vec3(1.0f);
 	dimension = glm::vec3(1.0f);
+	setMass(1.0f);
 }
 
 GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimension)
@@ -32,6 +33,7 @@ GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimensio
 	isEnvironment = false;
 	dimension = _dimension;
 	scale = glm::vec3(1.0f);
+	setMass(1.0f);
 }
 
 void GameObject::loadBaseObject(char const* filePath)
@@ -361,6 +363,7 @@ void Bomb::update(float dt)
 	if (isExploding())
 	{
 		currentExplodeTimer += dt;
+		std::cout << currentExplodeTimer << std::endl;
 		if (currentExplodeTimer >= maxExplodeTimer)
 		{
 			currentExplodeTimer = 0.0f;
@@ -401,8 +404,8 @@ void Bomb::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
 void Bomb::launch(glm::vec3 pos, glm::vec3 dir, float charge)
 {
 	setPos(pos);
-	setVel(dir * charge);
-	setAcc(glm::vec3(0.0f, 1.0f, 0.0f));
+	setVel(dir * charge * 10.0f);//* glm::vec3(0.0f, 5.0f, 0.0f));
+	//setAcc(glm::vec3(0.0f, 5.0f, 0.0f));
 	active = true;
 	useGravity(true);
 }
@@ -428,11 +431,17 @@ Collision Bomb::checkCollision(GameObject * other)
 
 void Bomb::explode()
 {
-	exploding = true;
-	setVel(glm::vec3(0.0f));
-	setAcc(glm::vec3(0.0f));
-	explosion.setPos(getPos());
-	useGravity(false);
+	if (!isExploding())
+	{
+		exploding = true;
+		setVel(glm::vec3(0.0f));
+		setAcc(glm::vec3(0.0f));
+		explosion.setPos(getPos());
+		useGravity(false);
+
+		currentFuseTimer = 0.0f;
+		currentExplodeTimer = 0.0f;
+	}
 }
 
 bool Bomb::isExploding() const { return exploding; }
