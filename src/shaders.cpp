@@ -39,6 +39,7 @@ bool CShader::loadShader(string sFile, int a_iType)
 
 	vector<string> sLines;
 	char sLine[255];
+
 	while (fgets(sLine, 255, fp))sLines.push_back(sLine);
 	fclose(fp);
 

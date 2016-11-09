@@ -37,7 +37,7 @@ bool ShaderLoader::loadShader(std::string name, int shaderType)
 	}
 	shaderID = glCreateShader(shaderType);
 
-	glShaderSource(shaderType, lines.size(), size, NULL);
+	glShaderSource(shaderID, lines.size(), size, NULL);
 	glCompileShader(shaderID);
 
 	delete[] size;
@@ -91,7 +91,7 @@ bool ShaderProgram::linkProgram()
 	glLinkProgram(programID);
 	int linkStatus;
 	glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
-	linked = linkStatus = GL_TRUE;
+	linked = linkStatus == GL_TRUE;
 
 	// TEMP
 	return linked;
