@@ -214,14 +214,15 @@ void initScene()
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
 	animation[0].setMass(0.5f);
-	//animation[0].useGravity(true);
+	animation[0].useGravity(true);
+
 
 	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
 	animation[1].setMass(0.5f);
-	//animation[1].useGravity(true);
+	animation[1].useGravity(true);
 
 	object.push_back(GameObject("obj\\table.obj", "img\\table_temp.jpg", glm::vec3(41.5f, 0.05f, 41.5f)));
 	object[0].bindObjectData(GL_STATIC_DRAW);
@@ -288,6 +289,7 @@ void initScene()
 
 	animation[0].bomb.setMass(0.1f);
 	animation[1].bomb.setMass(0.1f);
+
 }
 
 bool animate = false;
@@ -423,7 +425,7 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
 	{
-//	animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -432,7 +434,7 @@ void test()
 			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//	animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 
 
@@ -461,7 +463,7 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[1].lives > 0)
 	{
-	//	animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -470,7 +472,7 @@ void test()
 			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//	animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 	
 
@@ -491,7 +493,7 @@ void test()
 				0.0f, 0.0f, 5.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-			std::cout << animation[i].bomb.getPos().x << "  " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
+			std::cout << animation[i].bomb.getPos().x << " " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
 
 			if (animation[i].lives > 0)
 				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
@@ -679,11 +681,6 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//	std::cout << "left" << std::endl;
 	}
 
-
-	player->update(dt);
-
-	player->frame += dt;
-
 	if (player->getVel() != glm::vec3(0.0f))
 	{
 		player->addVel(-player->getVel() * dt * 6.0f);
@@ -826,9 +823,23 @@ void handleEvents(float dt)
 		Collision check = animation[i].bomb.checkCollision(&object[0]);
 		if (check.status == true)
 		{
-			std::cout << "Collision!" << std::endl;
+			std::cout << "Bomb collided with table" << std::endl;
 			animation[i].bomb.explode();
 			//animation[i].fastCollisionFix(check, dt);
+		}
+
+		check = animation[i].checkCollision(&object[0]);
+		if (check.status = true)
+		{
+			//std::cout << "player collided with table" << std::endl;
+
+			//std::cout << animation[i].getAcc().y << std::endl;
+			glm::vec3 normalForce(0.0f, -animation[i].getAcc().y, 0.0f);
+			//animation[i].addForce(dt, normalForce);
+			//animation[i].addAcc(normalForce);
+			animation[i].useGravity(false);
+			animation[i].setAcc(glm::vec3(0.0f));
+			animation[i].setVel(animation[i].getVel() * glm::vec3(1.0f, 0.0f, 1.0f));
 		}
 	}
 }
@@ -976,6 +987,7 @@ int main(int argc, char **argv)
 
 
 	initScene();
+
 	/* set up our function callbacks */
 	//alternative names
 
