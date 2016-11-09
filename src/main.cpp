@@ -220,7 +220,7 @@ void initScene()
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
 	animation[0].setMass(0.5f);
-	animation[0].useGravity(true);
+	//animation[0].useGravity(true);
 
 	animation[1] = PlayerObject("obj\\robot\\base.obj", "img\\Bombot2.jpg", glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
@@ -482,12 +482,10 @@ void test()
 	//glBindVertexArray(uiVAO2[1]);
 	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 	//glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
+
+	// Draw the bomb
 	for (int i = 0; i < 2; i++)
 	{
-		if (animation[i].bombThrow == true && animation[i].bombTimer > 0)
-		{
-
-			animation[i].bombTimer += dt;
 
 			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
 				1.0f, 0.0f, 0.0f, 0.0f,
@@ -495,57 +493,15 @@ void test()
 				0.0f, 0.0f, 1.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-			//sphere.x++;
-			//sphere.y++;
-
-			animation[i].bomb.addPos(animation[i].bomb.getVel());
-			animation[i].bomb.addVel(glm::vec3(0.0f, -0.05f, 0.0f));
-
 			if (animation[i].lives > 0)
 				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
 
-			if (animation[i].bombTimer > 1.5)
-			{
-				animation[i].bombTimer = 0;
-			}
-			int spot = 0;
-			int spot2 = 0;
-			if (i == 0)
-			{
-				spot = 4;
-				spot2 = 3;
-			}
-			else
-			{
-				spot = 5;
-				spot2 = 1;
-			}
-
-			//boundingBoxes[spot].max = animation[i].bomb.getPos() + dimensions[3];
-			//boundingBoxes[spot].min = animation[i].bomb.getPos() - dimensions[3];
-			//if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[spot2]))//checks whether we hit the other person
-			//{
-			//	//std::cout << "score" << std::endl;
-			//	animation[i].bombThrow = false;
-			//	animation[i].bombTimer = 0;
-			//	animation[i].score++;
-			//	if (i = 1)
-			//		animation[1].lives--;
-			//	else
-			//		animation[0].lives--;
-			//}
-			//if (aabb.collisionAABB(boundingBoxes[spot], boundingBoxes[2])) // checks whether we hit the floor
-			//{
-			//	animation[i].bombThrow = false;
-			//	animation[i].bombTimer = 0;
-			//}
-		}
+			
+	}
 		//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
 		//{
 		//	x_bomb -= 0.3f;
 		//}
-
-	}
 
 
 	//glBindVertexArray(uiVAO[0]);
@@ -690,11 +646,12 @@ void characterInput(PlayerObject *player, controller conPlayer)
 	{
 		glm::vec3 direction = glm::vec3(conPlayer.getRightStick().y, 1.0f, conPlayer.getRightStick().x);
 		direction = glm::normalize(direction);
-		player->bomb.setVel(glm::vec3(direction* player->charge));
+		player->throwBomb(direction);
+		/*player->bomb.setVel(glm::vec3(direction* player->charge));
 		player->bombThrow = true;
 		player->bomb.setPos(player->getPos());
 		player->bombTimer += dt;
-		player->charge = 0;
+		player->charge = 0;*/
 	}
 	//if (player.z > tempZ)
 	//{
@@ -837,8 +794,13 @@ void TimerCallbackFunction(int value)
 	{
 		o.update(dt);
 	}
-	animation[0].update(dt);
-	animation[1].update(dt);
+
+	for (PlayerObject & o : animation)
+	{
+		o.update(dt);
+		o.bomb.update(dt);
+	}
+
 
 	//	handle all events /////////////////////////////////////////////////////
 	handleEvents(dt);
