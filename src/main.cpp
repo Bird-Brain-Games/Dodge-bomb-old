@@ -423,7 +423,7 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
 	{
-//	animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+	animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -432,7 +432,7 @@ void test()
 			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//	animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 
 
@@ -461,7 +461,7 @@ void test()
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[1].lives > 0)
 	{
-	//	animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
@@ -470,7 +470,7 @@ void test()
 			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	//	animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
 	}
 	
 
@@ -491,7 +491,7 @@ void test()
 				0.0f, 0.0f, 5.0f, 0.0f,
 				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-			std::cout << animation[i].bomb.getPos().x << "  " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
+		//	std::cout << animation[i].bomb.getPos().x << "  " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
 
 			if (animation[i].lives > 0)
 				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
@@ -516,8 +516,8 @@ void test()
 			player->bomb.launch(player->getPos(), temp, player->charge);
 			while (player->bomb.isActive())
 			{
-				time += dt;
-				player->bomb.update(dt);
+				time += 0.017;
+				player->bomb.update(0.017);
 
 				if (player->bomb.checkCollision(&object[0]).status)
 				{
@@ -551,10 +551,10 @@ void test()
 				//if (player->charge > 0)
 				//{
 				//	glm::vec3 temp;
-				//	std::cout << player->direction.x << " " << player->direction.y << " " << player->direction.z << " " << std::endl;
+				//	//std::cout << player->direction.x << " " << player->direction.y << " " << player->direction.z << " " << std::endl;
 				//	temp = glm::normalize(player->direction);
 				//	temp.y = 1.0f;
-				//	std::cout << temp.x << " " << temp.y << " " << temp.z << " " << std::endl;
+				////	std::cout << temp.x << " " << temp.y << " " << temp.z << " " << std::endl;
 				//	player->bomb.setVel(glm::vec3(temp* player->charge));
 				//	while (player->bombTimer < 1.51)
 				//	{
