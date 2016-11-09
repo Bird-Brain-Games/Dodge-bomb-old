@@ -274,7 +274,7 @@ void initScene()
 	testShader.useProgram();
 
 	shVertex.loadShader("shaders\\shader.vert", GL_VERTEX_SHADER);
-	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);	
+	shFragment.loadShader("shaders\\shader.frag", GL_FRAGMENT_SHADER);
 
 	spMain.createProgram();
 	spMain.addShader(&shVertex);
@@ -372,9 +372,9 @@ void drawUI()
 void test()
 {
 
-	
 
-	
+
+
 	glClearColor(0.0f, 0.2f, 0.3f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -395,7 +395,7 @@ void test()
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, -3.0f, 0.0f, 1.0f);
+		object[0].getPos().x, object[0].getPos().y, object[0].getPos().z, 1.0f);
 
 
 	object[0].draw(iModelViewProjectionLoc, mvp);
@@ -407,7 +407,7 @@ void test()
 		0.0f, 0.0f, scale, 0.0f,
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
-	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(2.0f, -5.3f, 0.0f));
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -5.0f, 0.0f));
 
 	rotationMatrix = glm::mat4{
 		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
@@ -417,7 +417,8 @@ void test()
 
 	glm::mat4 directionModel = directionT * rotationMatrix;
 	mvp = ProjectionMatrix * ViewMatrix * directionModel;
-	line->draw(iModelViewProjectionLoc, mvp);
+	if (animation[0].charge > 0)
+		line->draw(iModelViewProjectionLoc, mvp);
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
@@ -434,7 +435,7 @@ void test()
 			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
 	}
 
 
@@ -444,7 +445,7 @@ void test()
 	  0.0f, 0.0f, scale, 0.0f,
 	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 
-	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -5.3f, 0.0f));
+	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
 	//directionT = ModelMatrix;
 
 	rotationMatrix = glm::mat4{
@@ -456,7 +457,8 @@ void test()
 
 	directionModel = directionT * rotationMatrix;
 	mvp = ProjectionMatrix * ViewMatrix * directionModel;
-	line->draw(iModelViewProjectionLoc, mvp);
+	if (animation[1].charge > 0)
+		line->draw(iModelViewProjectionLoc, mvp);
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
@@ -472,9 +474,9 @@ void test()
 			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 830);
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 882);
 	}
-	
+
 
 
 
@@ -487,22 +489,22 @@ void test()
 	for (int i = 0; i < 2; i++)
 	{
 
-			glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
-				5.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 5.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 5.0f, 0.0f,
-				animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
+		glm::mat4 mvp = ProjectionMatrix * ViewMatrix * glm::mat4(
+			5.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 5.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 5.0f, 0.0f,
+			animation[i].bomb.getPos().x, animation[i].bomb.getPos().y, animation[i].bomb.getPos().z, 1.0f);
 
-			std::cout << animation[i].bomb.getPos().x << " " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
+		std::cout << animation[i].bomb.getPos().x << " " << animation[i].bomb.getPos().y << " " << animation[i].bomb.getPos().z << std::endl;
 
-			if (animation[i].lives > 0)
-				animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
-			
+		if (animation[i].lives > 0)
+			animation[i].bomb.draw(iModelViewProjectionLoc, mvp);
+
 	}
-		//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
-		//{
-		//	x_bomb -= 0.3f;
-		//}
+	//if (aabb.collisionAABB(boundingBoxes[0], boundingBoxes[2]))//??
+	//{
+	//	x_bomb -= 0.3f;
+	//}
 
 
 	for (int i = 0; i < 2; i++)
@@ -512,7 +514,7 @@ void test()
 		if (player->charge > 0)
 		{
 			float increment = 0.1f;
-		
+
 			glm::vec3 temp = glm::normalize(player->direction);
 			temp.y = 1.0f;
 			player->bomb.launch(player->getPos(), temp, player->charge);
@@ -631,109 +633,111 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 
 void characterInput(PlayerObject *player, controller conPlayer)
 {
-	bool tempBool = false;
-	glm::vec3 tempVel;
-	tempVel = player->getVel();
-	Coords stick = conPlayer.getLeftStick();
-	glm::vec2 sNormalized = glm::normalize(glm::vec2(stick.x, stick.y));
-	//std::cout << stick.x << "   " << stick.y << std::endl;
-	float temp = 1;
-	bool sprint = conPlayer.conButton(XINPUT_GAMEPAD_B);
-	if (stick.y < -0.1 || stick.y > 0.1)
+	if (player->lives > 0)
 	{
-		player->addPos(glm::vec3(dt * playerSpeed*stick.y, 0.0f, 0.0f));
-		//	std::cout << "left" << std::endl;
-		if (sprint)
+		bool tempBool = false;
+		glm::vec3 tempVel;
+		tempVel = player->getVel();
+		Coords stick = conPlayer.getLeftStick();
+		glm::vec2 sNormalized = glm::normalize(glm::vec2(stick.x, stick.y));
+		//std::cout << stick.x << "   " << stick.y << std::endl;
+		float temp = 1;
+		bool sprint = conPlayer.conButton(XINPUT_GAMEPAD_B);
+		if (stick.y < -0.1 || stick.y > 0.1)
 		{
-			if (player->getVel().x == 0.0f && player->frame > 1)
+			player->addPos(glm::vec3(dt * playerSpeed*stick.y, 0.0f, 0.0f));
+			//	std::cout << "left" << std::endl;
+			if (sprint)
 			{
-				player->addVel(glm::vec3( sNormalized.y * playerSpeed * 3, 0.0f, 0.0f));
-				tempBool = true;
+				if (player->getVel().x == 0.0f && player->frame > 1)
+				{
+					player->addVel(glm::vec3(sNormalized.y * playerSpeed * 3, 0.0f, 0.0f));
+					tempBool = true;
+				}
 			}
 		}
-	}
-	if (stick.x < -0.1 || stick.x > 0.1)
-	{
-		player->addPos(glm::vec3(0.0f, 0.0f, dt * playerSpeed*stick.x));
-		if (sprint)
+		if (stick.x < -0.1 || stick.x > 0.1)
 		{
-			if (player->getVel().z == 0.0f && player->frame > 1)
+			player->addPos(glm::vec3(0.0f, 0.0f, dt * playerSpeed*stick.x));
+			if (sprint)
 			{
-				player->addVel(glm::vec3(0.0f, 0.0f, sNormalized.x * playerSpeed * 3));
-				tempBool = true;
+				if (player->getVel().z == 0.0f && player->frame > 1)
+				{
+					player->addVel(glm::vec3(0.0f, 0.0f, sNormalized.x * playerSpeed * 3));
+					tempBool = true;
+				}
+			}
+			//	std::cout << "up" << std::endl;
+		}
+
+		if (tempBool == true)
+		{
+			player->frame = 0;
+		}
+		stick = conPlayer.getRightStick();
+		//std::cout << stick.x << "   " << stick.y << std::endl;
+
+		if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
+		{
+			player->direction = glm::vec3(stick.y, 0.0f, stick.x);
+			float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
+			player->setRot(glm::vec3(0.0f, angle, 0.0f));
+			//	std::cout << "left" << std::endl;
+		}
+
+		if (player->getVel() != glm::vec3(0.0f))
+		{
+			player->addVel(-player->getVel() * dt * 6.0f);
+			if (player->frame >= 0.2)
+			{
+				player->setVel(glm::vec3(0.0f));
 			}
 		}
-		//	std::cout << "up" << std::endl;
-	}
 
-	if (tempBool == true)
-	{
-		player->frame = 0;
-	}
-	stick = conPlayer.getRightStick();
-	//std::cout << stick.x << "   " << stick.y << std::endl;
 
-	if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
-	{
-		player->direction = glm::vec3(stick.y, 0.0f, stick.x);
-		float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
-		player->setRot(glm::vec3(0.0f, angle, 0.0f));
-		//	std::cout << "left" << std::endl;
-	}
+		//if (conPlayer.conButton(XINPUT_GAMEPAD_A) && player->checkCollision(&object[0]).status)
+		//{
+		//	player->addPos(glm::vec3(0.0f, 1.0f, 0.0f));
+		//}
 
-	if (player->getVel() != glm::vec3(0.0f))
-	{
-		player->addVel(-player->getVel() * dt * 6.0f);
-		if (player->frame >= 0.2)
+
+		if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && !player->bomb.isActive())
 		{
-			player->setVel(glm::vec3(0.0f));
+			if (player->charge == 0)
+				player->charge = 0.3;
+
+			if (player->charge < 1.0)
+				player->charge += 0.03;
+
 		}
+		if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
+			&& !player->bomb.isActive())
+		{
+			glm::vec3 temp;
+			temp = glm::normalize(player->direction);
+			temp.y = 1.0f;
+			player->throwBomb(temp);
+			/*player->bomb.setVel(glm::vec3(direction* player->charge));
+			player->bomb.setVel(glm::vec3(temp* player->charge));
+			player->bombThrow = true;
+			player->bomb.setPos(player->getPos());
+			player->bombTimer += dt;
+			player->charge = 0;*/
+		}
+
+		//if (player.z > tempZ)
+		//{
+		//	animate = true;
+		//	dirForward = true;
+		//}
+		//else if (character_pos.z < tempZ)
+		//{
+		//	animate = true;
+		//	dirForward = true;
+		//}
+		//else
+		//	animate = false;
 	}
-
-
-	if (conPlayer.conButton(XINPUT_GAMEPAD_A) && player->checkCollision(&object[0]).status)
-	{
-		player->addPos(glm::vec3(0.0f, 1.0f, 0.0f));
-	}
-
-
-	if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && !player->bomb.isActive())
-	{
-		if (player->charge == 0)
-			player->charge = 0.3;
-
-		if (player->charge < 1.0)
-			player->charge += 0.03;
-
-	}
-	if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
-		&& !player->bomb.isActive())
-	{
-		glm::vec3 temp;
-		temp = glm::normalize(player->direction);
-		temp.y = 1.0f;
-		player->throwBomb(temp);
-		/*player->bomb.setVel(glm::vec3(direction* player->charge));
-		player->bomb.setVel(glm::vec3(temp* player->charge));
-		player->bombThrow = true;
-		player->bomb.setPos(player->getPos());
-		player->bombTimer += dt;
-		player->charge = 0;*/
-	}
-
-	//if (player.z > tempZ)
-	//{
-	//	animate = true;
-	//	dirForward = true;
-	//}
-	//else if (character_pos.z < tempZ)
-	//{
-	//	animate = true;
-	//	dirForward = true;
-	//}
-	//else
-	//	animate = false;
-
 }
 bool selected = true;
 void processInputs()
@@ -753,14 +757,14 @@ void processInputs()
 	//fg ht ry
 
 	if (KEYBOARD_INPUT->CheckPressEvent('3'))
-	//	selected = false;
-	if (KEYBOARD_INPUT->CheckPressEvent('4'))
-	//	selected = true;
+		//	selected = false;
+		if (KEYBOARD_INPUT->CheckPressEvent('4'))
+			//	selected = true;
 
-	if (KEYBOARD_INPUT->IsKeyDown('f'))
-	{
-		UI_pos.x -= playerSpeed;
-	}
+			if (KEYBOARD_INPUT->IsKeyDown('f'))
+			{
+				UI_pos.x -= playerSpeed;
+			}
 	if (KEYBOARD_INPUT->IsKeyDown('h'))
 	{
 		UI_pos.x += playerSpeed;
@@ -829,12 +833,12 @@ void handleEvents(float dt)
 		}
 
 		check = animation[i].checkCollision(&object[0]);
-		if (check.status = true)
+		if (check.status == true)
 		{
 			//std::cout << "player collided with table" << std::endl;
 
 			//std::cout << animation[i].getAcc().y << std::endl;
-			glm::vec3 normalForce(0.0f, -animation[i].getAcc().y, 0.0f);
+			//glm::vec3 normalForce(0.0f, -animation[i].getAcc().y, 0.0f);
 			//animation[i].addForce(dt, normalForce);
 			//animation[i].addAcc(normalForce);
 			animation[i].useGravity(false);
@@ -882,7 +886,7 @@ void TimerCallbackFunction(int value)
 	{
 		o.update(dt);
 		o.bomb.update(dt);
-		
+
 	}
 
 	//	handle all events /////////////////////////////////////////////////////
