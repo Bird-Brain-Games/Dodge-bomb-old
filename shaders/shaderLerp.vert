@@ -1,10 +1,11 @@
 #version 330
 
-uniform vec3 lerpTarget;
 uniform float dt;
 
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec2 inCoord;
+layout (location = 3) in vec3 lerpTarget;
+// vertex attribute for the lerp target
 
 out vec2 texCoord;
 

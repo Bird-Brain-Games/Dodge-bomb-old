@@ -37,7 +37,8 @@ void GameObject::loadBaseObject(char const* filePath)
 
 void GameObject::update(float deltaTime)
 {
-
+	vel += acc * deltaTime;
+	pos += vel * deltaTime;
 }
 
 void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp)
@@ -164,7 +165,7 @@ Animation const& AnimatedObject::getAnim(int pose) const
 void AnimatedObject::update(float deltaTime)
 {
 	GameObject::update(deltaTime);
-	animations.at(currentAnim).update(deltaTime, getBaseLoader());
+	//animations.at(currentAnim).update(deltaTime, getBaseLoader());
 	GameObject::bindObjectData(GL_DYNAMIC_DRAW);
 }
 
