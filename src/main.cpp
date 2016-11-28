@@ -117,7 +117,6 @@ Collision aabb;
 ShaderLoader shVertex, shFragment, testVert, testFrag;
 ShaderProgram spMain, testShader;
 
-float time = 0.0f;
 
 glm::vec3 up;
 
@@ -654,10 +653,23 @@ void characterInput(PlayerObject *player, controller conPlayer)
 
 		if (stick.y > 0.1 || stick.y < -0.1 || stick.x > 0.1 || stick.x < -0.1)
 		{
-			player->direction = glm::vec3(stick.y, 0.0f, stick.x);
-			float angle = atan2(stick.y, -stick.x) + 180 * degToRad;
+			player->direction = glm::vec3(-stick.y, 0.0f, -stick.x);
+			float angle = atan2(-stick.y, stick.x) + 180 * degToRad;
 			player->setRot(glm::vec3(0.0f, angle, 0.0f));
 			//	std::cout << "left" << std::endl;
+
+			if (player->charge == 0)
+				player->charge = 0.15;
+
+			if (player->charge < 1.0)
+				player->charge += 0.015;
+		}
+		else if (player->charge > 0 && !player->bomb.isActive())
+		{
+			glm::vec3 temp;
+			temp = glm::normalize(player->direction);
+			temp.y = 1.0f;
+			player->throwBomb(temp);
 		}
 
 		if (player->getVel() != glm::vec3(0.0f))
@@ -676,29 +688,29 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//}
 
 
-		if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && !player->bomb.isActive())
-		{
-			if (player->charge == 0)
-				player->charge = 0.15;
-
-			if (player->charge < 1.0)
-				player->charge += 0.015;
-
-		}
-		if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
-			&& !player->bomb.isActive())
-		{
-			glm::vec3 temp;
-			temp = glm::normalize(player->direction);
-			temp.y = 1.0f;
-			player->throwBomb(temp);
-			/*player->bomb.setVel(glm::vec3(direction* player->charge));
-			player->bomb.setVel(glm::vec3(temp* player->charge));
-			player->bombThrow = true;
-			player->bomb.setPos(player->getPos());
-			player->bombTimer += dt;
-			player->charge = 0;*/
-		}
+		//if (conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) && !player->bomb.isActive())
+		//{
+		//	if (player->charge == 0)
+		//		player->charge = 0.15;
+		//
+		//	if (player->charge < 1.0)
+		//		player->charge += 0.015;
+		//
+		//}
+		//if (player->charge > 0 && conPlayer.conButton(XINPUT_GAMEPAD_RIGHT_SHOULDER) == false
+		//	&& !player->bomb.isActive())
+		//{
+		//	glm::vec3 temp;
+		//	temp = glm::normalize(player->direction);
+		//	temp.y = 1.0f;
+		//	player->throwBomb(temp);
+		//	/*player->bomb.setVel(glm::vec3(direction* player->charge));
+		//	player->bomb.setVel(glm::vec3(temp* player->charge));
+		//	player->bombThrow = true;
+		//	player->bomb.setPos(player->getPos());
+		//	player->bombTimer += dt;
+		//	player->charge = 0;*/
+		//}
 
 		//if (player.z > tempZ)
 		//{
