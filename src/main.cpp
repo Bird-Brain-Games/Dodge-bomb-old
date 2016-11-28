@@ -14,10 +14,11 @@
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtc\type_ptr.hpp"
 
-
 #include "IL\ilut.h"
+
 //Project files
 #include "shaderLoader.h"
+#include "GameEngine.h"
 #include "GameObject.h"
 #include "shaders.h"
 #include "math.h"
@@ -25,6 +26,7 @@
 #include "controller.h"
 
 glm::mat4 rotationMatrix;
+GameEngine engine;
 
 controller p1(0);
 controller p2(1);
@@ -977,7 +979,7 @@ int main(int argc, char **argv)
 	iluInit();
 	ilutRenderer(ILUT_OPENGL);
 
-
+	engine.Init();
 
 	initScene();
 
@@ -991,7 +993,7 @@ int main(int argc, char **argv)
 	glutMouseFunc(MouseClickCallbackFunction);// mouseclick
 	glutMotionFunc(MouseMotionCallbackFunction);//mouseMovedActive() clicking and moving etc
 	glutPassiveMotionFunc(MousePassiveMotionCallbackFunction);//mouseMovedPassive() just mouse movement
-	glutTimerFunc(1, TimerCallbackFunction, 0);//Timmer/clockTick function
+	glutTimerFunc(1, TimerCallbackFunction, 0);//Timer/clockTick function
 
 
 
@@ -1000,6 +1002,7 @@ int main(int argc, char **argv)
 
 	// Cleanup
 	KEYBOARD_INPUT->Destroy();
+	engine.Quit();
 
 	return 0;
 
