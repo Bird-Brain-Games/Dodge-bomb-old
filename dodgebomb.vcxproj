@@ -102,7 +102,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;libfbxsdk.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,7 +118,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;libfbxsdk.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -138,7 +138,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;libfbxsdk.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,12 +158,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;DevIL.lib;ILU.lib;ILUT.lib;Xinput.lib;libfbxsdk.lib;libfbxsdk-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\controller.cpp" />
+    <ClCompile Include="src\fbxLoader.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\HTRLoader.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\objLoader.cpp" />
@@ -172,8 +174,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\controller.h" />
+    <ClInclude Include="src\fbxLoader.h" />
     <ClInclude Include="src\GameObject.h" />
+    <ClInclude Include="src\HTRLoader.h" />
     <ClInclude Include="src\InputManager.h" />
+    <ClInclude Include="src\JointTypes.h" />
     <ClInclude Include="src\math.h" />
     <ClInclude Include="src\objLoader.h" />
     <ClInclude Include="src\shaderLoader.h" />

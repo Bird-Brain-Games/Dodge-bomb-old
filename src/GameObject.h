@@ -3,7 +3,13 @@
 #pragma once
 
 #include "objLoader.h"
-#include <glm\glm.hpp>
+#include "glm\glm.hpp"
+#include "fbxLoader.h"
+#include "JointTypes.h"
+#include "glm\gtx\transform.hpp"
+#include "glm\gtc\type_ptr.hpp"
+
+class HTRLoader;
 
 enum ForceMode
 {
@@ -18,6 +24,133 @@ struct Collision
 	bool status;
 	glm::vec3 overlap;
 	glm::vec3 normal;
+};
+
+class Joints
+{
+protected:
+	float m_pScale;
+
+	float m_pRotX, m_pRotY, m_pRotZ; // local rotation angles
+
+	glm::vec3 m_pLocalPosition;
+	glm::mat4 m_pLocalRotation;
+
+	glm::mat4 m_pLocalTransformMatrix;
+	glm::mat4 m_pLocalToWorldMatrix;
+
+	// Forward Kinematics
+	Joints* m_pParent;
+	std::vector<Joints*> m_pChildren;
+
+	// HTR animation
+	unsigned int m_pCurrentFrame;
+
+
+public:
+	Joints();
+	Joints(std::string _name, glm::vec3 position);
+	~Joints();
+
+	void setPosition(glm::vec3 newPosition);
+	void setRotationAngleX(float newAngle);
+	void setRotationAngleY(float newAngle);
+	void setRotationAngleZ(float newAngle);
+	void setScale(float newScale);
+
+	glm::mat4 getLocalToWorldMatrix();
+
+	virtual void update(float dt);
+	virtual void draw();
+
+	// Animation from HTR
+	JointDescriptor* jointAnimation;
+
+
+	// Forward Kinematics
+	// Pass in null to make game object a root node
+	void setParent(Joints* newParent);
+	void addChild(Joints* newChild);
+	void removeChild(Joints* rip);
+	glm::vec3 getWorldPosition();
+	glm::mat4 getWorldRotation();
+	bool isRoot();
+
+	// Other Properties
+	std::string name;
+	glm::vec4 colour;
+	// Mesh* ...
+	// Material* ...
+};
+
+#pragma once
+
+#include <string>
+#include "JointTypes.h"
+
+class HTRLoader
+{
+public:
+	HTRLoader();
+
+	// Loads the specified HTR file. 
+	// Returns true if successful
+	bool loadHTR(std::string fileName);
+
+	// Loop through each joint descriptor until the input jointName is found
+	// If not found, will return a nullptr
+	JointDescriptor* getJointDescriptorByName(std::string jointName);
+
+	// Returns pointer to specific joint
+	Joints* getGameObjectByName(std::string jointName);
+
+	// Turns the HTR file into usable game objects
+	void createGameObjects();
+
+	// Returns root node (usually the hip if a humanoid skeleton)
+	Joints* getRootGameObject();
+
+private:
+
+	// Functions used in parsing process
+	bool processHeaderSection(FILE* fp, char* loc);
+	bool processHeader(std::string header, std::string value);
+	bool processSegementNameSection(FILE* fp, char* loc);
+	bool processBasePositionSection(FILE* fp, char* loc);
+	bool processAnimationSection(FILE* fp, char* loc);
+
+	// Increments the file pointer to the next line in the file
+	// and copies it into buffer
+	void goToNextValidLineInFile(FILE* fp, char* buffer);
+
+	// Takes in 3 euler angles and returns a quaternion
+	glm::quat createQuaternion(float rx, float ry, float rz);
+
+	// Describes the data in the file
+
+	std::string fileType;		// File extension
+	std::string dataType;		// What kind of data is stored in file. 
+								// Ie. HTRS means Hierarchical translations followed by rotations and scale
+
+	int			fileVersion;	// Useful if you are generating binary object files on load, can check the version of an existing binary file, 
+								// check version of text, if text version > binary version then reparse, otherwise just use binary
+
+	int			numSegments;	// Number of bones in skeleton
+	int			numFrames;		// number of frames in the animation
+	int			fps;			// FPS of the animation
+
+	RotationOrder rotationOrder;	// Order to apply rotations
+	std::string	calibrationUnits;// 
+	char		upAxis;			// X, Y, Z (usually Y)
+	std::string rotationUnits;	// "Degrees" or "Radians"
+	char		boneLengthAxis;	// Axis that is aligned with bone
+
+								// Actual animation data
+	std::vector<JointDescriptor> jointDescriptors;	// Stores each joint and its parent (could be an array since we know number of segments)
+
+	std::vector<Joints> jointGameObjects;
+
+	Joints* rootGameObject;
 };
 
 class GameObject
@@ -67,6 +200,8 @@ public:
 	glm::vec3 const & getRot() const;
 
 	void useGravity(bool _gravity = true);
+
+	
 
 protected:
 	// Physics variables
@@ -170,6 +305,8 @@ public:
 
 	void takeDamage(int damage);
 
+	
+
 	// Debug command for resetting character
 	void reset();
 
@@ -187,4 +324,7 @@ public:
 
 	float frame = 0;
 
+	HTRLoader loader;
+	fbxLoader weights;
+	Joints skeleton;
 };

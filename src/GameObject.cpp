@@ -5,12 +5,15 @@
 #include "GLUT\glut.h"
 #include <stdexcept>
 #include "math.h"
+#include "glm\gtx\transform.hpp"
+
 
 GameObject::GameObject()
 {
-	boundingBox = Loader("obj\\cube.obj");
 	isEnvironment = false;
 	scale = glm::vec3(1.0f);
+	pos = glm::vec3(0.0f);
+	rot = glm::vec3(0.0f);
 	dimension = glm::vec3(1.0f);
 	setMass(1.0f);
 	acc = glm::vec3(0.0f);
@@ -243,7 +246,188 @@ glm::vec3 const & GameObject::getVel() const { return  vel; };
 glm::vec3 const & GameObject::getAcc() const { return  acc; };
 glm::vec3 const & GameObject::getRot() const { return  rot; };
 
+//////////JOINT OBJECT /////////////////////////////////////////////////////
 
+#include <iostream>
+
+Joints::Joints()
+	: m_pScale(1.0f),
+	colour(glm::vec4(1.0)),
+	m_pCurrentFrame(0),
+	jointAnimation(nullptr)
+{
+
+}
+
+Joints::~Joints() {}
+
+void Joints::setPosition(glm::vec3 newPosition)
+{
+	m_pLocalPosition = newPosition;
+}
+
+void Joints::setRotationAngleX(float newAngle)
+{
+	m_pRotX = newAngle;
+}
+
+void Joints::setRotationAngleY(float newAngle)
+{
+	m_pRotY = newAngle;
+}
+
+void Joints::setRotationAngleZ(float newAngle)
+{
+	m_pRotZ = newAngle;
+}
+
+void Joints::setScale(float newScale)
+{
+	m_pScale = newScale;
+}
+
+glm::mat4 Joints::getLocalToWorldMatrix()
+{
+	return m_pLocalToWorldMatrix;
+}
+
+void Joints::update(float dt)
+{
+	// Create 4x4 transformation matrix
+
+	// If there is no animation for this joint, create the transform matrix as usual
+	if (jointAnimation == nullptr)
+	{
+		// Create rotation matrix
+		glm::mat4 rx = glm::rotate(glm::radians(m_pRotX), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 ry = glm::rotate(glm::radians(m_pRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rz = glm::rotate(glm::radians(m_pRotZ), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// Note: pay attention to rotation order, ZYX is not the same as XYZ
+		// Order is specified by an HTR file when you export it
+		m_pLocalRotation = rz * ry * rx;
+
+	}
+	else // Transform comes from HTR
+	{
+		m_pLocalRotation =
+			glm::mat4_cast(jointAnimation->jointBaseRotation * jointAnimation->jointRotations[m_pCurrentFrame]);
+
+		m_pLocalPosition = jointAnimation->jointBasePosition + jointAnimation->jointPositions[m_pCurrentFrame];
+
+		jointAnimation->jointScales[m_pCurrentFrame];
+
+		// Increment frame (note: you could do this based on dt)
+		m_pCurrentFrame++;
+
+		if (m_pCurrentFrame >= jointAnimation->numFrames)
+			m_pCurrentFrame = 0;
+
+	}
+
+	// Create translation matrix
+	glm::mat4 tran = glm::translate(m_pLocalPosition);
+
+	// Create scale matrix
+	glm::mat4 scal = glm::scale(glm::vec3(m_pScale, m_pScale, m_pScale));
+
+	// Combine all above transforms into a single matrix
+	// This is the local transformation matrix, ie. where is this game object relative to it's parent
+	// If a game object has no parent (it is a root node) then its local transform is also it's global transform
+	// If a game object has a transform, then we must apply the parent's transform
+	m_pLocalTransformMatrix = tran * m_pLocalRotation * scal;
+
+	if (m_pParent)
+		m_pLocalToWorldMatrix = m_pParent->getLocalToWorldMatrix() * m_pLocalTransformMatrix;
+	else
+		m_pLocalToWorldMatrix = m_pLocalTransformMatrix;
+
+	// Update children
+	for (int i = 0; i < m_pChildren.size(); i++)
+		m_pChildren[i]->update(dt);
+}
+
+void Joints::draw()
+{
+	// Draw a coordinate frame for the object
+	glm::vec3 wPos = getWorldPosition();
+	glm::mat4 wRot = getWorldRotation();
+
+	glm::vec4 red(1.0f, 0.0f, 0.0f, 1.0f);
+	glm::vec4 green(0.0f, 1.0f, 0.0f, 1.0f);
+	glm::vec4 blue(0.0f, 0.0f, 1.0f, 1.0f);
+
+	//TTK::Graphics::DrawVector(wPos, wRot[0], 3.0f, red);
+	//TTK::Graphics::DrawVector(wPos, wRot[1], 3.0f, green);
+	//TTK::Graphics::DrawVector(wPos, wRot[2], 3.0f, blue);
+
+	// Draw node
+	//TTK::Graphics::DrawSphere(m_pLocalToWorldMatrix, 0.5f, colour);
+
+	// Draw line to parent 
+	if (m_pParent && !m_pParent->isRoot())
+	{
+		glm::vec3 parentWorldPosition = m_pParent->getWorldPosition();
+		glm::vec3 myWorldPositon = getWorldPosition();
+
+		//TTK::Graphics::DrawLine(myWorldPositon, parentWorldPosition, 5.0f);
+	}
+
+	// Draw children
+	for (int i = 0; i < m_pChildren.size(); ++i)
+		m_pChildren[i]->draw();
+
+}
+
+void Joints::setParent(Joints* newParent)
+{
+	m_pParent = newParent;
+}
+
+void Joints::addChild(Joints* newChild)
+{
+	if (newChild)
+	{
+		m_pChildren.push_back(newChild);
+		newChild->setParent(this); // tell new child that this game object is its parent
+	}
+}
+
+void Joints::removeChild(Joints* rip)
+{
+	for (int i = 0; i < m_pChildren.size(); ++i)
+	{
+		if (m_pChildren[i] == rip) // compare memory locations (pointers)
+		{
+		//	std::cout << "Removing child: " + rip->name << " from object: " << this->name;
+			m_pChildren.erase(m_pChildren.begin() + i);
+		}
+	}
+}
+
+glm::vec3 Joints::getWorldPosition()
+{
+	if (m_pParent)
+		return m_pParent->getLocalToWorldMatrix() * glm::vec4(m_pLocalPosition, 1.0f);
+	else
+		return m_pLocalPosition;
+}
+
+glm::mat4 Joints::getWorldRotation()
+{
+	if (m_pParent)
+		return m_pParent->getWorldRotation() * m_pLocalRotation;
+	else
+		return m_pLocalRotation;
+}
+
+bool Joints::isRoot()
+{
+	if (m_pParent)
+		return false;
+	else
+		return true;
+}
 
 
 
@@ -324,7 +508,7 @@ void AnimatedObject::setCurrentAnim(int newAnimIndex)
 
 PlayerObject::PlayerObject(char const* basePosePath, char * texData, int _side, glm::vec3 _dimension)
 	: AnimatedObject(basePosePath, texData, _dimension),
-	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png", _side)
+	bomb("obj\\bomb.obj", "img\\bPileDiffuse.png", _side), weights("obj\\test.fbx")
 {
 	score = 0;
 	charge = 0;
@@ -332,10 +516,15 @@ PlayerObject::PlayerObject(char const* basePosePath, char * texData, int _side, 
 	side = _side;
 	maxiFrames = 3.0f;
 	currentiFrames = maxiFrames;
+
+	loader.loadHTR("obj\\bombot.htr");
+	loader.createGameObjects();
+	
+	skeleton.addChild(loader.getRootGameObject());
 }
 
 PlayerObject::PlayerObject()
-	: AnimatedObject()
+	: AnimatedObject(),  weights("obj\\test.fbx")
 {
 	score = 0;
 	charge = 0;
@@ -343,6 +532,11 @@ PlayerObject::PlayerObject()
 	side = 0;
 	maxiFrames = 3.0f;
 	currentiFrames = maxiFrames;
+
+	loader.loadHTR("obj\\bombot.htr");
+	loader.createGameObjects();
+	
+	skeleton.addChild(loader.getRootGameObject());
 }
 
 void PlayerObject::update(float dt)
