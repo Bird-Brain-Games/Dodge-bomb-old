@@ -61,6 +61,8 @@ glm::vec2 currentAngles = gameDefaultAngle;
 
 
 bool inMenu;
+bool isReady;
+bool inMainMenu;
 
 //glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
 //glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -205,8 +207,7 @@ void initScene()
 {
 	inMenu = false;
 
-	UI.push_back(GameObject("obj\\score.obj", "img\\score.png", glm::vec3(1.0f)));
-	UI.push_back(GameObject("obj\\number.obj"));
+	//UI.push_back(GameObject("obj\\paper.obj", ");
 
 	//dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	//dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
@@ -238,7 +239,7 @@ void initScene()
 	object[2].setPos(glm::vec3(28.0f, 60.0f, 0.0f));
 
 	// Initialize menu objects
-	menuObjects.push_back(GameObject("obj\\board.obj", "img\\boardDiffuse.jpg", glm::vec3(0.024, 0.7855, 0.995)));
+	menuObjects.push_back(GameObject("obj\\board.obj", "img\\menu\\boardDiffuse.jpg", glm::vec3(0.024, 0.7855, 0.995)));
 	menuObjects[0].bindObjectData(GL_STATIC_DRAW);
 	menuObjects[0].setScale(glm::vec3(40.0f));
 	menuObjects[0].setPos(glm::vec3(0.0f, 25.0f, 0.0f));
@@ -251,8 +252,8 @@ void initScene()
 
 
 
-	UI[0].bindObjectData();
-	UI[1].bindObjectData();
+	//UI[0].bindObjectData();
+	//UI[1].bindObjectData();
 
 	line = new GameObject("obj//direction.obj", "img//black.png", glm::vec3(1.0f));
 	line->bindObjectData();
@@ -389,29 +390,9 @@ void drawUI()
 	glActiveTexture(GL_TEXTURE0);
 
 
-	UI[0].draw(iModelViewProjectionLoc, mvp);
+	
 
-
-	mvp = glm::mat4(
-		0.2f, 0.0f, 0.0f, 0.0f,
-		0.0f, 0.2f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.2f, 0.0f,
-		-0.1f, 0.6f, 0.0f, 1.0f);
-
-	if (score >= 10)
-	{
-		glBindTexture(GL_TEXTURE_2D, texture_handler_score[(score + 1) % 10]);
-		glBindVertexArray(UI[1].getVAO()[1]);
-		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, texture_handler_score[score + 1]);
-		glBindVertexArray(UI[1].getVAO()[1]);
-		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
-	}
+	
 }
 
 void test()
@@ -759,11 +740,31 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//	animate = false;
 	}
 }
+
+void processMenuInputs()
+{
+
+	if (KEYBOARD_INPUT->CheckPressEvent('m'))
+	{
+		inMenu = !inMenu;
+
+		if (inMenu)
+		{
+			position = menuDefaultPos;
+			currentAngles = menuDefaultAngle;
+		}
+		else
+		{
+			position = gameDefaultPos;
+			currentAngles = gameDefaultAngle;
+		}
+	}
+}
+
 bool selected = true;
 void processInputs()
 {
 	//std::cout << p1.connected() << std::endl;
-
 	if (selected == true)
 	{
 		characterInput(&animation[0], p1);
@@ -913,7 +914,8 @@ void TimerCallbackFunction(int value)
 	/* this call gives it a proper frame delay to hit our target FPS */
 
 	// Process all inputs /////////////////////////////////////////////////////
-	processInputs();
+	if (inMenu) processMenuInputs();
+	else processInputs();
 	// Flush event list
 	KEYBOARD_INPUT->WipeEventList();
 
