@@ -226,22 +226,23 @@ void GameObject::bindTexture(char* filePath)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GameObject::setPos(glm::vec3 const & _set) { pos = _set; };
-void GameObject::setVel(glm::vec3 const & _set) { vel = _set; };
-void GameObject::setAcc(glm::vec3 const & _set) { acc = _set; };
-void GameObject::setRot(glm::vec3 const & _set) { rot = _set; };
+void GameObject::setPos(glm::vec3 const & _set) { pos = _set; }
+void GameObject::setVel(glm::vec3 const & _set) { vel = _set; }
+void GameObject::setAcc(glm::vec3 const & _set) { acc = _set; }
+void GameObject::setRot(glm::vec3 const & _set) { rot = _set; }
 void GameObject::setMass(float _mass) { mass = _mass; }
 void GameObject::useGravity(bool _gravity) { gravity = _gravity; }
 
-void GameObject::addPos(glm::vec3 const & _set) { pos += _set; };
-void GameObject::addVel(glm::vec3 const & _set) { vel += _set; };
-void GameObject::addAcc(glm::vec3 const & _set) { acc += _set; };
-void GameObject::addRot(glm::vec3 const & _set) { rot += _set; };
+void GameObject::addPos(glm::vec3 const & _set) { pos += _set; }
+void GameObject::addVel(glm::vec3 const & _set) { vel += _set; }
+void GameObject::addAcc(glm::vec3 const & _set) { acc += _set; }
+void GameObject::addRot(glm::vec3 const & _set) { rot += _set; }
 
-glm::vec3 const & GameObject::getPos() const { return  pos; };
-glm::vec3 const & GameObject::getVel() const { return  vel; };
-glm::vec3 const & GameObject::getAcc() const { return  acc; };
-glm::vec3 const & GameObject::getRot() const { return  rot; };
+glm::vec3 const & GameObject::getPos() const { return  pos; }
+glm::vec3 const & GameObject::getVel() const { return  vel; }
+glm::vec3 const & GameObject::getAcc() const { return  acc; }
+glm::vec3 const & GameObject::getRot() const { return  rot; }
+glm::vec3 const & GameObject::getScale() const { return scale; }
 
 
 

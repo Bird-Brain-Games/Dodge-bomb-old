@@ -65,6 +65,7 @@ public:
 	glm::vec3 const & getVel() const;
 	glm::vec3 const & getAcc() const;
 	glm::vec3 const & getRot() const;
+	glm::vec3 const & getScale() const;
 
 	void useGravity(bool _gravity = true);
 
