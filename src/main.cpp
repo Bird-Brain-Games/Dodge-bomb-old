@@ -53,6 +53,14 @@ int score = 0;
 
 glm::vec3 direction;
 glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
+glm::vec3 gameDefaultPos = glm::vec3(-119.0f, 72.5f, 1.0f);
+glm::vec3 menuDefaultPos = glm::vec3(-155.0f, 80.0f, 1.0f);
+glm::vec2 gameDefaultAngle(1.57000148f, -0.520000100);
+glm::vec2 menuDefaultAngle(1.57f, -0.140f);
+glm::vec2 currentAngles = gameDefaultAngle;
+
+
+bool inMenu;
 
 //glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
 //glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -60,10 +68,6 @@ glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
 
 glm::vec3 bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
 
-// Initial horizontal angle : toward -Z
-float horizontalAngle = 3.14f;
-// Initial vertical angle : none
-float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 44.4000092;
 
@@ -109,6 +113,8 @@ UINT testing;
 
 vector<GameObject> object;
 vector<GameObject> UI;
+vector<GameObject> menuObjects;
+vector<AnimatedObject> menuAnimations;
 
 PlayerObject animation[2];
 
@@ -143,23 +149,19 @@ void makeMatricies()
 {
 	if (cameraLock == false)
 	{
-		horizontalAngle += mouseSpeed * float(lastMousepositionX - mousepositionX);
-		verticalAngle += mouseSpeed * float(lastMousepositionY - mousepositionY);
+		currentAngles.x += mouseSpeed * float(lastMousepositionX - mousepositionX);
+		currentAngles.y += mouseSpeed * float(lastMousepositionY - mousepositionY);
 	}
-	else
-	{
-		horizontalAngle = 1.57000148;
-		verticalAngle = -0.520000100;
-	}
+
 	direction = glm::vec3(
-		cos(verticalAngle) * sin(horizontalAngle),
-		sin(verticalAngle),
-		cos(verticalAngle) * cos(horizontalAngle)
+		cos(currentAngles.y) * sin(currentAngles.x),
+		sin(currentAngles.y),
+		cos(currentAngles.y) * cos(currentAngles.x)
 	);
 	glm::vec3 right = glm::vec3(
-		sin(horizontalAngle - 3.14f / 2.0f),
+		sin(currentAngles.x - 3.14f / 2.0f),
 		0,
-		cos(horizontalAngle - 3.14f / 2.0f)
+		cos(currentAngles.x - 3.14f / 2.0f)
 	);
 	up = glm::cross(right, direction);
 
@@ -201,6 +203,8 @@ float scale = 1.0;
 
 void initScene()
 {
+	inMenu = false;
+
 	UI.push_back(GameObject("obj\\score.obj", "img\\score.png", glm::vec3(1.0f)));
 	UI.push_back(GameObject("obj\\number.obj"));
 
@@ -229,6 +233,15 @@ void initScene()
 
 	object.push_back(GameObject("obj\\room.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
 	object[1].bindObjectData(GL_STATIC_DRAW);
+	object.push_back(GameObject("obj\\wall.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object[2].bindObjectData(GL_STATIC_DRAW);
+	object[2].setPos(glm::vec3(28.0f, 60.0f, 0.0f));
+
+	// Initialize menu objects
+	menuObjects.push_back(GameObject("obj\\board.obj", "img\\boardDiffuse.jpg", glm::vec3(0.024, 0.7855, 0.995)));
+	menuObjects[0].bindObjectData(GL_STATIC_DRAW);
+	menuObjects[0].setScale(glm::vec3(40.0f));
+	menuObjects[0].setPos(glm::vec3(0.0f, 25.0f, 0.0f));
 
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
@@ -300,6 +313,7 @@ bool dirForward = true;
 
 void test();
 void drawUI();
+void drawMenu();
 void DisplayCallbackFunction(void)
 {
 	//glViewport(0, 0, windowWidth, windowHeight / 2);
@@ -311,7 +325,7 @@ void DisplayCallbackFunction(void)
 
 	gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
 	test();
-
+	drawMenu();
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
@@ -324,6 +338,34 @@ void DisplayCallbackFunction(void)
 }
 
 glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
+
+void drawMenu()
+{
+	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+	glm::mat4 ProjectionMatrix = getProjectionMatrix();
+	glm::mat4 ViewMatrix = getViewMatrix();
+	glm::mat4 identity = glm::mat4(1.0);
+	glm::mat4 mvp; //= ProjectionMatrix * ViewMatrix * identity;
+	glm::mat4  ModelMatrix, transMatrix, scaleMatrix;
+
+	transMatrix = glm::translate(identity, menuObjects[0].getPos());
+	scaleMatrix = glm::scale(identity, menuObjects[0].getScale());
+	ModelMatrix = transMatrix * scaleMatrix;
+
+	/*ModelMatrix = glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		menuObjects[0].getPos().x, menuObjects[0].getPos().y - 1.0f, menuObjects[0].getPos().z, 1.0f);*/
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+
+	for (int i = 0; i < menuObjects.size(); i++)
+	{
+		menuObjects[i].draw(iModelViewProjectionLoc, mvp);
+	}
+}
 
 void drawUI()
 {
@@ -418,6 +460,9 @@ void test()
 
 	object[1].draw(iModelViewProjectionLoc, mvp);
 
+	mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, object[2].getPos()) * rotationMatrix;
+
+	object[2].draw(iModelViewProjectionLoc, mvp);
 
 	ModelMatrix = glm::mat4{
 		scale, 0.0f, 0.0f, 0.0f,
@@ -774,6 +819,21 @@ void processInputs()
 	if (KEYBOARD_INPUT->CheckPressEvent('c'))
 	{
 		cameraLock = !cameraLock;
+	}
+	if (KEYBOARD_INPUT->CheckPressEvent('m'))
+	{
+		inMenu = !inMenu;
+
+		if (inMenu)
+		{
+			position = menuDefaultPos;
+			currentAngles = menuDefaultAngle;
+		}
+		else
+		{
+			position = gameDefaultPos;
+			currentAngles = gameDefaultAngle;
+		}
 	}
 
 	//if (KEYBOARD_INPUT->IsKeyDown('1'))
