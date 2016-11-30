@@ -232,7 +232,7 @@ void initScene()
 	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
-	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
+	animation[0].setPos(glm::vec3(0.0, 10.0, 35.0));
 	animation[0].setMass(1.5f);
 	animation[0].useGravity(true);
 
@@ -240,7 +240,7 @@ void initScene()
 	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
-	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
+	animation[1].setPos(glm::vec3(0.0, 10.0, -35.0));
 	animation[1].setMass(1.5f);
 	animation[1].useGravity(true);
 
@@ -413,9 +413,9 @@ void drawUI()
 	glActiveTexture(GL_TEXTURE0);
 
 
-	
 
-	
+
+
 }
 
 void test()
@@ -678,10 +678,10 @@ void KeyboardUpCallbackFunction(unsigned char key, int x, int y)
 
 void characterInput(PlayerObject *player, controller conPlayer)
 {
-	if (conPlayer.conButton(XINPUT_GAMEPAD_LEFT_SHOULDER))
-	{
-		player->reset();
-	}
+	//if (conPlayer.conButton(XINPUT_GAMEPAD_LEFT_SHOULDER))
+	//{
+	//	player->reset();
+	//}
 
 	if (player->lives > 0)
 	{
@@ -734,11 +734,14 @@ void characterInput(PlayerObject *player, controller conPlayer)
 			player->setRot(glm::vec3(0.0f, angle, 0.0f));
 			//	std::cout << "left" << std::endl;
 
-			if (player->charge == 0)
-				player->charge = 0.15;
+			if (player->bomb.isActive() == false)
+			{
+				if (player->charge == 0)
+					player->charge = 0.15;
 
-			if (player->charge < 1.0)
-				player->charge += 0.015;
+				if (player->charge < 1.0)
+					player->charge += 0.015;
+			}
 		}
 		else if (player->charge > 0 && !player->bomb.isActive())
 		{
@@ -801,6 +804,26 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//else
 		//	animate = false;
 	}
+
+	if (player->getPos().x > 20)
+	{
+		player->setPos(glm::vec3(20.0f, player->getPos().y, player->getPos().z));
+	}
+	if (player->getPos().x < -24)
+	{
+		player->setPos(glm::vec3(-24.0f, player->getPos().y, player->getPos().z));
+	}
+	if (player->getPos().z > 43)
+	{
+		player->setPos(glm::vec3(player->getPos().x, player->getPos().y, 43));
+	}
+	if (player->getPos().z < -43)
+	{
+		player->setPos(glm::vec3(player->getPos().x, player->getPos().y, -43));
+	}
+
+
+	printf("x: %f \n y: %f \n", player->getPos().x, player->getPos().z);
 }
 
 void processMenuInputs()
@@ -1003,6 +1026,16 @@ void TimerCallbackFunction(int value)
 
 	//	handle all events /////////////////////////////////////////////////////
 	handleEvents(dt);
+
+	if (animation[0].lives == 0 || animation[1].lives == 0)
+	{
+		animation[0].currentiFrames = animation[0].maxiFrames;
+		animation[1].currentiFrames = animation[0].maxiFrames;
+		animation[0].bomb.reset();
+			animation[1].bomb.reset();
+		animation[0].reset(glm::vec3(0.0, 10.0, 35.0));
+		animation[1].reset(glm::vec3(0.0, 10.0, -35.0));
+	}
 
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }
