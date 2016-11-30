@@ -33,7 +33,7 @@ GameObject::GameObject(char const* filePath, char * texData, glm::vec3 _dimensio
 {
 	boundingBox = Loader("obj\\cube.obj");
 	loadBaseObject(filePath);
-	bindTexture(texData);
+	bindTexture(texData, 0);
 	isEnvironment = false;
 	dimension = _dimension;
 	acc = glm::vec3(0.0f);
@@ -210,13 +210,13 @@ void GameObject::bindObjectData(GLuint DrawType)
 	}
 }
 
-void GameObject::bindTexture(char* filePath)
+void GameObject::bindTexture(char* filePath, int texIt)
 {
-	glGenTextures(1, &texHandle[0]);
-	glGenSamplers(1, &texSampler[0]);
+	glGenTextures(1, &texHandle[texIt]);
+	//glGenSamplers(1, &texSampler[texIt]);
 	
-	texHandle[0] = ilutGLLoadImage(filePath);
-	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+	texHandle[texIt] = ilutGLLoadImage(filePath);
+	glBindTexture(GL_TEXTURE_2D, texHandle[texIt]);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
 		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
@@ -224,6 +224,25 @@ void GameObject::bindTexture(char* filePath)
 		ilGetData()); /* Texture specification */
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+GLuint GameObject::bindTexture(char* filePath)
+{
+	GLuint index;
+	glGenTextures(1, &index);
+	//glGenSamplers(1, &texSampler[texIt]);
+
+	index = ilutGLLoadImage(filePath);
+	glBindTexture(GL_TEXTURE_2D, index);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+		ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,
+		ilGetData()); /* Texture specification */
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return index;
 }
 
 void GameObject::setPos(glm::vec3 const & _set) { pos = _set; }

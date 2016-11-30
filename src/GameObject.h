@@ -35,7 +35,8 @@ public:
 
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
-	void bindTexture(char * filePath);
+	void bindTexture(char * filePath, int);
+	GLuint bindTexture(char* filePath);
 
 	Loader & getBaseLoader() { return obj; }
 	GLuint const* getVAO() { return uiVAO; }	// To be removed probably
@@ -82,7 +83,7 @@ protected:
 
 	bool gravity = false;
 
-private:
+protected:
 	Loader obj;
 	Loader boundingBox;
 	bool isEnvironment;
