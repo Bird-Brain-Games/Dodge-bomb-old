@@ -474,6 +474,86 @@ void test()
 
 	//rotationMatrix = glm::rotate(directionT, animation[0].getRot());
 
+	rotationMatrix = glm::mat4{
+		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+
+	ModelMatrix = glm::mat4{
+		scale, 0.0f, 0.0f, 0.0f,
+		0.0f, scale, 0.0f, 0.0f,
+		0.0f, 0.0f, scale, 0.0f,
+		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[0].lives > 0)
+	{
+		if (!animation[0].isInvincible())
+			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+		//animation[0].draw(pass, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+		printf("%f", animation[0].getPos().x);
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
+	}
+
+
+	ModelMatrix = glm::mat4{
+		scale, 0.0f, 0.0f, 0.0f,
+		0.0f, scale, 0.0f, 0.0f,
+		0.0f, 0.0f, scale, 0.0f,
+		animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+
+	rotationMatrix = glm::mat4{
+		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[1].lives > 0)
+	{
+		if (!animation[1].isInvincible())
+			animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 882);
+	}
+	
+	rotationMatrix = glm::mat4{
+		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+
+	ModelMatrix = glm::mat4{
+		scale, 0.0f, 0.0f, 0.0f,
+		0.0f, scale, 0.0f, 0.0f,
+		0.0f, 0.0f, scale, 0.0f,
+		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
+
+	glm::mat4 directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	if (animation[0].charge > 0)
 	{
 		glm::vec3 playerPos(animation[0].getPos());
 		glm::vec3 dir(-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y));
@@ -482,27 +562,6 @@ void test()
 
 		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line->getPos()); //* directionModel;
 	}
-		
-
-	ModelMatrix = ModelMatrix * rotationMatrix;
-
-
-	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-	if (animation[0].lives > 0)
-	{
-		if (!animation[0].isInvincible())
-			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
-
-		ModelMatrix = glm::mat4{
-			scale, 0.0f, 0.0f, 0.0f,
-			0.0f, scale, 0.0f, 0.0f,
-			0.0f, 0.0f, scale, 0.0f,
-			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
-	}
-
 
 	ModelMatrix = glm::mat4{
 	  scale, 0.0f, 0.0f, 0.0f,
@@ -609,46 +668,6 @@ void test()
 		}
 	}
 
-	rotationMatrix = glm::mat4{
-		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-
-	ModelMatrix = glm::mat4{
-		scale, 0.0f, 0.0f, 0.0f,
-		0.0f, scale, 0.0f, 0.0f,
-		0.0f, 0.0f, scale, 0.0f,
-		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-
-	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
-
-	glm::mat4 directionModel = directionT * rotationMatrix;
-	mvp = ProjectionMatrix * ViewMatrix * directionModel;
-	if (animation[0].charge > 0)
-		line->draw(iModelViewProjectionLoc, mvp);
-
-
-	ModelMatrix = glm::mat4{
-		scale, 0.0f, 0.0f, 0.0f,
-		0.0f, scale, 0.0f, 0.0f,
-		0.0f, 0.0f, scale, 0.0f,
-		animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
-
-	rotationMatrix = glm::mat4{
-		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
-
-	directionModel = directionT * rotationMatrix;
-	mvp = ProjectionMatrix * ViewMatrix * directionModel;
-	if (animation[1].charge > 0)
-		line->draw(iModelViewProjectionLoc, mvp);
-
 
 
 	//weightMain.useProgram();
@@ -662,67 +681,7 @@ void test()
 	//pass[2] = &boneMatrix;
 	//pass[1] = &boneCount;
 
-	rotationMatrix = glm::mat4{
-		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
 
-
-	ModelMatrix = glm::mat4{
-		scale, 0.0f, 0.0f, 0.0f,
-		0.0f, scale, 0.0f, 0.0f,
-		0.0f, 0.0f, scale, 0.0f,
-		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-
-	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-	if (animation[0].lives > 0)
-	{
-		if (!animation[0].isInvincible())
-			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
-			//animation[0].draw(pass, mvp, 0, 2490);
-
-		ModelMatrix = glm::mat4{
-			scale, 0.0f, 0.0f, 0.0f,
-			0.0f, scale, 0.0f, 0.0f,
-			0.0f, 0.0f, scale, 0.0f,
-			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-		printf("%f", animation[0].getPos().x);
-		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
-	}
-
-
-	ModelMatrix = glm::mat4{
-		scale, 0.0f, 0.0f, 0.0f,
-		0.0f, scale, 0.0f, 0.0f,
-		0.0f, 0.0f, scale, 0.0f,
-		animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
-
-	rotationMatrix = glm::mat4{
-		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-	ModelMatrix = ModelMatrix * rotationMatrix;
-
-	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-	if (animation[1].lives > 0)
-	{
-		if (!animation[1].isInvincible())
-			animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
-
-		ModelMatrix = glm::mat4{
-			scale, 0.0f, 0.0f, 0.0f,
-			0.0f, scale, 0.0f, 0.0f,
-			0.0f, 0.0f, scale, 0.0f,
-			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
-		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 882);
-	}
 
 
 

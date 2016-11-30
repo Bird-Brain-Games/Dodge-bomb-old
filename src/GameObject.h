@@ -235,7 +235,7 @@ protected:
 
 protected:
 	Loader obj;
-private:
+protected:
 	Loader boundingBox;
 	bool isEnvironment;
 
