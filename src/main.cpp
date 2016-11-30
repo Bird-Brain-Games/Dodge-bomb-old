@@ -19,6 +19,7 @@
 //Project files
 #include "shaderLoader.h"
 #include "GameObject.h"
+#include "MultiTexObject.h"
 #include "shaders.h"
 #include "math.h"
 #include "InputManager.h"
@@ -30,6 +31,8 @@ controller p1(0);
 controller p2(1);
 
 GameObject *line;
+GameObject line2;
+glm::vec3 crosshairPos[2];
 float incriment = 0.1;
 
 float x_bomb = -2.0f;
@@ -114,7 +117,7 @@ UINT testing;
 
 
 vector<GameObject> object;
-vector<GameObject> UI;
+vector<MultiObject> UI;
 vector<GameObject> menuObjects;
 vector<AnimatedObject> menuAnimations;
 
@@ -207,7 +210,20 @@ void initScene()
 {
 	inMenu = false;
 
-	//UI.push_back(GameObject("obj\\paper.obj", ");
+
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\paperDiff.jpg", glm::vec3(1.0f)));	// "Ready?" note
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\blueNOREADY.jpg", glm::vec3(1.0f)));	// Blue note
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\redNOREADY.jpg", glm::vec3(1.0f)));	// Red note
+
+	//UI[1].addTex("img\\menu\\blueREADY.jpg");
+	//UI[1].addTex("img\\menu\\tacnoteBLUEDif.jpg");
+	//UI[1].addTex("img\\menu\\tacnoteBLUExDif.jpg");
+
+	//UI[2].addTex("img\\menu\\blueREADY.jpg");
+	//UI[2].addTex("img\\menu\\tacnoteBLUEDif.jpg");
+	//UI[2].addTex("img\\menu\\tacnoteBLUExDif.jpg");
+	//
+	//UI[0].bindObjectData();
 
 	//dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	//dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
@@ -255,8 +271,10 @@ void initScene()
 	//UI[0].bindObjectData();
 	//UI[1].bindObjectData();
 
-	line = new GameObject("obj//direction.obj", "img//black.png", glm::vec3(1.0f));
+	line = new GameObject("obj//crosshair.obj", "img//redtargetdif.jpg", glm::vec3(1.0f));
 	line->bindObjectData();
+	line2 = GameObject("obj//crosshair.obj", "img//bluetargetdiff.jpg", glm::vec3(1.0f));
+	line2.bindObjectData();
 
 	char sTemp[] = "img\\num\\0.png";
 	for (int count = 0; count < 10; count++)
@@ -459,10 +477,21 @@ void test()
 		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f };
 
+	//rotationMatrix = glm::rotate(directionT, animation[0].getRot());
 	glm::mat4 directionModel = directionT * rotationMatrix;
 	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+
 	if (animation[0].charge > 0)
+	{
+		glm::vec3 playerPos(animation[0].getPos());
+		glm::vec3 dir(-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y));
+		crosshairPos[0] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
+		line->setPos(lerp(playerPos, crosshairPos[0], animation[0].charge));
+
+		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line->getPos()); //* directionModel;
 		line->draw(iModelViewProjectionLoc, mvp);
+	}
+		
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
@@ -503,7 +532,15 @@ void test()
 	directionModel = directionT * rotationMatrix;
 	mvp = ProjectionMatrix * ViewMatrix * directionModel;
 	if (animation[1].charge > 0)
-		line->draw(iModelViewProjectionLoc, mvp);
+	{
+		glm::vec3 playerPos(animation[1].getPos());
+		glm::vec3 dir(-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y));
+		crosshairPos[1] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
+		line2.setPos(lerp(playerPos, crosshairPos[1], animation[1].charge));
+
+		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line2.getPos()); //* directionModel;
+		line2.draw(iModelViewProjectionLoc, mvp);
+	}
 
 	ModelMatrix = ModelMatrix * rotationMatrix;
 
@@ -577,6 +614,7 @@ void test()
 				if (player->bomb.isExploding())
 				{
 					player->bomb.reset();
+					//crosshairPos[i] = player->bomb.getPos();
 				}
 
 				int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
