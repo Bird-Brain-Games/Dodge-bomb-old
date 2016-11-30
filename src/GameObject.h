@@ -325,7 +325,7 @@ public:
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
 
 	// Debug command for resetting character
-	void reset();
+	void reset(glm::vec3);
 
 	void draw(GLint *iModelViewProjectionLoc[], glm::mat4 const& mvp, int point1, int point2);
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2);

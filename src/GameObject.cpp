@@ -666,10 +666,10 @@ void PlayerObject::takeDamage(int damage)
 	lives -= damage;
 }
 
-void PlayerObject::reset()
+void PlayerObject::reset(glm::vec3 temp)
 {
 	lives = 2;
-	setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+	setPos(temp);
 	useGravity(true);
 }
 
