@@ -15,7 +15,7 @@ public:
 	bool ShaderLoader::getLoaded();
 	UINT getShaderID();
 
-	
+	void ShaderLoader::OutputProgramLog() const;
 private:
 	//variables for a shader
 	UINT shaderID;// Shader ID
@@ -32,6 +32,8 @@ class ShaderProgram
 {
 public:
 
+	void ShaderProgram::OutputProgramLog() const;
+
 	ShaderProgram();
 
 	void createProgram();
@@ -47,3 +49,4 @@ private:
 	UINT programID;
 	bool linked;
 };
+

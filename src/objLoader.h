@@ -26,8 +26,8 @@ public:
 	void setVertex(int index, glm::vec3 const& newVertex);
 	void setVertices(std::vector<glm::vec3> const& newVertices);
 
-private:
 	std::vector<glm::vec3> out_vertices;
+private:
 	std::vector<glm::vec2> out_uvs;
 	std::vector<glm::vec3> out_normals;
 	std::vector<float> color;

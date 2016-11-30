@@ -28,6 +28,13 @@ struct Collision
 
 class Joints
 {
+public:
+	glm::mat4 m_pLocalTransformMatrix;
+	glm::mat4 m_pLocalToWorldMatrix;
+	void setWorldMatrix(glm::mat4);
+
+	Joints* m_pParent;
+	std::vector<Joints*> m_pChildren;
 protected:
 	float m_pScale;
 
@@ -36,12 +43,8 @@ protected:
 	glm::vec3 m_pLocalPosition;
 	glm::mat4 m_pLocalRotation;
 
-	glm::mat4 m_pLocalTransformMatrix;
-	glm::mat4 m_pLocalToWorldMatrix;
 
 	// Forward Kinematics
-	Joints* m_pParent;
-	std::vector<Joints*> m_pChildren;
 
 	// HTR animation
 	unsigned int m_pCurrentFrame;
@@ -59,6 +62,9 @@ public:
 	void setScale(float newScale);
 
 	glm::mat4 getLocalToWorldMatrix();
+	glm::mat4 getLocalTransform();
+
+	Joints* getParent();
 
 	virtual void update(float dt);
 	virtual void draw();
@@ -104,11 +110,15 @@ public:
 	// Returns pointer to specific joint
 	Joints* getGameObjectByName(std::string jointName);
 
+	std::vector<Joints> getJointList();
+
 	// Turns the HTR file into usable game objects
 	void createGameObjects();
 
 	// Returns root node (usually the hip if a humanoid skeleton)
 	Joints* getRootGameObject();
+
+	void setWorldOrigin(glm::mat4);
 
 private:
 
@@ -165,6 +175,7 @@ public:
 	void update(float deltaTime);
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp);
 	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2);
+	void draw(GLint* iModelViewProjectionLoc[], glm::mat4 const& mvp, int count, glm::mat4 matrix[], int point1, int point2);
 
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
@@ -214,15 +225,18 @@ protected:
 	glm::vec3 dimension;
 	glm::vec3 scale;
 
+
+	GLuint uiVAO[2];
+	GLuint uiVBO[5];
+
 	bool gravity = false;
 
-private:
 	Loader obj;
+private:
 	Loader boundingBox;
 	bool isEnvironment;
 
-	GLuint uiVAO[2];
-	GLuint uiVBO[6];
+	GLuint uiVBOD[3];//debug version
 	GLuint texHandle[1];
 	GLuint texSampler[1];
 };
@@ -295,7 +309,7 @@ public:
 
 	void update(float dt);
 
-	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
+	void bindskeleton(GLuint DrawType = GL_DYNAMIC_DRAW);
 
 	void throwBomb(glm::vec3 direction);
 
@@ -305,10 +319,13 @@ public:
 
 	void takeDamage(int damage);
 
-	
+	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
 
 	// Debug command for resetting character
 	void reset();
+
+	void draw(GLint *iModelViewProjectionLoc[], glm::mat4 const& mvp, int point1, int point2);
+	void draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2);
 
 	Bomb bomb;
 	int score;
@@ -327,4 +344,8 @@ public:
 	HTRLoader loader;
 	fbxLoader weights;
 	Joints skeleton;
+
+	int jointNum;
+	glm::mat4 boneMatrix[28];
+
 };

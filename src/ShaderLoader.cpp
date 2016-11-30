@@ -59,6 +59,16 @@ void ShaderLoader::deleteShader()
 	glDeleteShader(shaderID);
 }
 
+void ShaderLoader::OutputProgramLog() const
+{
+	GLint maxLength = 0;
+	glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
+
+	// The maxLength includes the NULL character
+	std::vector<GLchar> errorLog(maxLength);
+	glGetShaderInfoLog(shaderID, maxLength, &maxLength, &errorLog[0]);
+}
+
 ShaderProgram::ShaderProgram()
 {
 	linked = false;
@@ -108,3 +118,14 @@ void ShaderProgram::useProgram()
 		glUseProgram(programID);
 	}
 }
+
+void ShaderProgram::OutputProgramLog() const
+{
+	std::vector<char> infoLog;
+	infoLog.resize(512);
+
+	GLint infoLen;
+	glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLen);
+	glGetProgramInfoLog(programID, sizeof(char) * 512, &infoLen, &infoLog[0]); std::cout << std::string(infoLog.begin(), infoLog.end()) << "\n";
+}
+
