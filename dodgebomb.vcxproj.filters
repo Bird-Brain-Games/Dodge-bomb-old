@@ -10,6 +10,8 @@
     <ClCompile Include="src\controller.cpp" />
     <ClCompile Include="src\fbxLoader.cpp" />
     <ClCompile Include="src\HTRLoader.cpp">
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\MultiTexObject.cpp" />
       <Filter>joint/htr</Filter>
     </ClCompile>
   </ItemGroup>
@@ -21,6 +23,8 @@
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\controller.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\MultiTexObject.h" />
     <ClInclude Include="src\fbxLoader.h" />
     <ClInclude Include="src\HTRLoader.h">
       <Filter>joint/htr</Filter>

@@ -179,7 +179,8 @@ public:
 
 
 	void bindObjectData(GLuint DrawType = GL_DYNAMIC_DRAW);
-	void bindTexture(char * filePath);
+	void bindTexture(char * filePath, int);
+	GLuint bindTexture(char* filePath);
 
 	Loader & getBaseLoader() { return obj; }
 	GLuint const* getVAO() { return uiVAO; }	// To be removed probably
@@ -209,6 +210,7 @@ public:
 	glm::vec3 const & getVel() const;
 	glm::vec3 const & getAcc() const;
 	glm::vec3 const & getRot() const;
+	glm::vec3 const & getScale() const;
 
 	void useGravity(bool _gravity = true);
 
@@ -231,6 +233,7 @@ protected:
 
 	bool gravity = false;
 
+protected:
 	Loader obj;
 private:
 	Loader boundingBox;

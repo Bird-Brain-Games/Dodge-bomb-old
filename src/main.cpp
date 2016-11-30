@@ -19,6 +19,7 @@
 //Project files
 #include "shaderLoader.h"
 #include "GameObject.h"
+#include "MultiTexObject.h"
 #include "shaders.h"
 #include "math.h"
 #include "InputManager.h"
@@ -30,6 +31,8 @@ controller p1(0);
 controller p2(1);
 
 GameObject *line;
+GameObject line2;
+glm::vec3 crosshairPos[2];
 float incriment = 0.1;
 
 float x_bomb = -2.0f;
@@ -53,6 +56,16 @@ int score = 0;
 
 glm::vec3 direction;
 glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
+glm::vec3 gameDefaultPos = glm::vec3(-119.0f, 72.5f, 1.0f);
+glm::vec3 menuDefaultPos = glm::vec3(-155.0f, 80.0f, 1.0f);
+glm::vec2 gameDefaultAngle(1.57000148f, -0.520000100);
+glm::vec2 menuDefaultAngle(1.57f, -0.140f);
+glm::vec2 currentAngles = gameDefaultAngle;
+
+
+bool inMenu;
+bool isReady;
+bool inMainMenu;
 
 //glm::vec3 character2_pos = glm::vec3(0.0f, 2.5f, 40.6f);
 //glm::vec3 sphere_pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -60,10 +73,6 @@ glm::vec3 position = glm::vec3(-119.0f, 72.5f, 1.0f);
 
 glm::vec3 bomb_acceleration = glm::vec3(0.0f, 1.0f, 1.0f);
 
-// Initial horizontal angle : toward -Z
-float horizontalAngle = 3.14f;
-// Initial vertical angle : none
-float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 44.4000092;
 
@@ -108,7 +117,9 @@ UINT testing;
 
 
 vector<GameObject> object;
-vector<GameObject> UI;
+vector<MultiObject> UI;
+vector<GameObject> menuObjects;
+vector<AnimatedObject> menuAnimations;
 
 PlayerObject animation[2];
 
@@ -142,23 +153,19 @@ void makeMatricies()
 {
 	if (cameraLock == false)
 	{
-		horizontalAngle += mouseSpeed * float(lastMousepositionX - mousepositionX);
-		verticalAngle += mouseSpeed * float(lastMousepositionY - mousepositionY);
+		currentAngles.x += mouseSpeed * float(lastMousepositionX - mousepositionX);
+		currentAngles.y += mouseSpeed * float(lastMousepositionY - mousepositionY);
 	}
-	else
-	{
-		horizontalAngle = 1.57000148;
-		verticalAngle = -0.520000100;
-	}
+
 	direction = glm::vec3(
-		cos(verticalAngle) * sin(horizontalAngle),
-		sin(verticalAngle),
-		cos(verticalAngle) * cos(horizontalAngle)
+		cos(currentAngles.y) * sin(currentAngles.x),
+		sin(currentAngles.y),
+		cos(currentAngles.y) * cos(currentAngles.x)
 	);
 	glm::vec3 right = glm::vec3(
-		sin(horizontalAngle - 3.14f / 2.0f),
+		sin(currentAngles.x - 3.14f / 2.0f),
 		0,
-		cos(horizontalAngle - 3.14f / 2.0f)
+		cos(currentAngles.x - 3.14f / 2.0f)
 	);
 	up = glm::cross(right, direction);
 
@@ -200,15 +207,29 @@ float scale = 1.0;
 
 void initScene()
 {
-	UI.push_back(GameObject("obj\\score.obj", "img\\score.png", glm::vec3(1.0f)));
-	UI.push_back(GameObject("obj\\number.obj"));
+	inMenu = false;
+
+
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\paperDiff.jpg", glm::vec3(1.0f)));	// "Ready?" note
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\blueNOREADY.jpg", glm::vec3(1.0f)));	// Blue note
+	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\redNOREADY.jpg", glm::vec3(1.0f)));	// Red note
+
+	//UI[1].addTex("img\\menu\\blueREADY.jpg");
+	//UI[1].addTex("img\\menu\\tacnoteBLUEDif.jpg");
+	//UI[1].addTex("img\\menu\\tacnoteBLUExDif.jpg");
+
+	//UI[2].addTex("img\\menu\\blueREADY.jpg");
+	//UI[2].addTex("img\\menu\\tacnoteBLUEDif.jpg");
+	//UI[2].addTex("img\\menu\\tacnoteBLUExDif.jpg");
+	//
+	//UI[0].bindObjectData();
 
 	//dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
 	//dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
 	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
 	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
-	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
@@ -216,7 +237,7 @@ void initScene()
 	animation[0].useGravity(true);
 
 
-	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
@@ -228,6 +249,15 @@ void initScene()
 
 	object.push_back(GameObject("obj\\room.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
 	object[1].bindObjectData(GL_STATIC_DRAW);
+	object.push_back(GameObject("obj\\wall.obj", "img\\wall and floor (diffuse).png", glm::vec3(41.5f, 0.05f, 41.5f)));
+	object[2].bindObjectData(GL_STATIC_DRAW);
+	object[2].setPos(glm::vec3(28.0f, 60.0f, 0.0f));
+
+	// Initialize menu objects
+	menuObjects.push_back(GameObject("obj\\board.obj", "img\\menu\\boardDiffuse.jpg", glm::vec3(0.024, 0.7855, 0.995)));
+	menuObjects[0].bindObjectData(GL_STATIC_DRAW);
+	menuObjects[0].setScale(glm::vec3(40.0f));
+	menuObjects[0].setPos(glm::vec3(0.0f, 25.0f, 0.0f));
 
 	animation[0].bindObjectData();
 	animation[1].bindObjectData();
@@ -237,11 +267,13 @@ void initScene()
 
 
 
-	UI[0].bindObjectData();
-	UI[1].bindObjectData();
+	//UI[0].bindObjectData();
+	//UI[1].bindObjectData();
 
-	line = new GameObject("obj//direction.obj", "img//black.png", glm::vec3(1.0f));
+	line = new GameObject("obj//crosshair.obj", "img//redtargetdif.jpg", glm::vec3(1.0f));
 	line->bindObjectData();
+	line2 = GameObject("obj//crosshair.obj", "img//bluetargetdiff.jpg", glm::vec3(1.0f));
+	line2.bindObjectData();
 
 	char sTemp[] = "img\\num\\0.png";
 	for (int count = 0; count < 10; count++)
@@ -305,6 +337,7 @@ bool dirForward = true;
 
 void test();
 void drawUI();
+void drawMenu();
 void DisplayCallbackFunction(void)
 {
 	//glViewport(0, 0, windowWidth, windowHeight / 2);
@@ -316,7 +349,7 @@ void DisplayCallbackFunction(void)
 
 	gluPerspective(initialFoV, windowWidth / windowHeight, 0.1f, 10000.0f);
 	test();
-
+	drawMenu();
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
@@ -329,6 +362,34 @@ void DisplayCallbackFunction(void)
 }
 
 glm::vec3 UI_pos(0.0f, 0.0f, 0.0f);
+
+void drawMenu()
+{
+	int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
+	glm::mat4 ProjectionMatrix = getProjectionMatrix();
+	glm::mat4 ViewMatrix = getViewMatrix();
+	glm::mat4 identity = glm::mat4(1.0);
+	glm::mat4 mvp; //= ProjectionMatrix * ViewMatrix * identity;
+	glm::mat4  ModelMatrix, transMatrix, scaleMatrix;
+
+	transMatrix = glm::translate(identity, menuObjects[0].getPos());
+	scaleMatrix = glm::scale(identity, menuObjects[0].getScale());
+	ModelMatrix = transMatrix * scaleMatrix;
+
+	/*ModelMatrix = glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		menuObjects[0].getPos().x, menuObjects[0].getPos().y - 1.0f, menuObjects[0].getPos().z, 1.0f);*/
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+
+	for (int i = 0; i < menuObjects.size(); i++)
+	{
+		menuObjects[i].draw(iModelViewProjectionLoc, mvp);
+	}
+}
 
 void drawUI()
 {
@@ -352,29 +413,9 @@ void drawUI()
 	glActiveTexture(GL_TEXTURE0);
 
 
-	UI[0].draw(iModelViewProjectionLoc, mvp);
+	
 
-
-	mvp = glm::mat4(
-		0.2f, 0.0f, 0.0f, 0.0f,
-		0.0f, 0.2f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.2f, 0.0f,
-		-0.1f, 0.6f, 0.0f, 1.0f);
-
-	if (score >= 10)
-	{
-		glBindTexture(GL_TEXTURE_2D, texture_handler_score[(score + 1) % 10]);
-		glBindVertexArray(UI[1].getVAO()[1]);
-		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, texture_handler_score[score + 1]);
-		glBindVertexArray(UI[1].getVAO()[1]);
-		glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawArrays(GL_TRIANGLES, 0, UI[1].getBaseLoader().getVertices().size());
-	}
+	
 }
 
 void test()
@@ -427,7 +468,70 @@ void test()
 
 	object[1].draw(iModelViewProjectionLoc, mvp);
 
+	mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, object[2].getPos()) * rotationMatrix;
 
+	object[2].draw(iModelViewProjectionLoc, mvp);
+
+	//rotationMatrix = glm::rotate(directionT, animation[0].getRot());
+
+	{
+		glm::vec3 playerPos(animation[0].getPos());
+		glm::vec3 dir(-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y));
+		crosshairPos[0] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
+		line->setPos(lerp(playerPos, crosshairPos[0], animation[0].charge));
+
+		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line->getPos()); //* directionModel;
+	}
+		
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[0].lives > 0)
+	{
+		if (!animation[0].isInvincible())
+			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
+	}
+
+
+	ModelMatrix = glm::mat4{
+	  scale, 0.0f, 0.0f, 0.0f,
+	  0.0f, scale, 0.0f, 0.0f,
+	  0.0f, 0.0f, scale, 0.0f,
+	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+
+	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
+	//directionT = ModelMatrix;
+
+	rotationMatrix = glm::mat4{
+		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+
+	directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+	if (animation[1].charge > 0)
+	{
+		glm::vec3 playerPos(animation[1].getPos());
+		glm::vec3 dir(-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y));
+		crosshairPos[1] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
+		line2.setPos(lerp(playerPos, crosshairPos[1], animation[1].charge));
+
+		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line2.getPos()); //* directionModel;
+		line2.draw(iModelViewProjectionLoc, mvp);
+	}
 
 
 
@@ -477,6 +581,7 @@ void test()
 				if (player->bomb.isExploding())
 				{
 					player->bomb.reset();
+					//crosshairPos[i] = player->bomb.getPos();
 				}
 
 				int iModelViewProjectionLoc = glGetUniformLocation(spMain.getProgramID(), "modelViewProjectionMatrix");
@@ -776,11 +881,31 @@ void characterInput(PlayerObject *player, controller conPlayer)
 		//	animate = false;
 	}
 }
+
+void processMenuInputs()
+{
+
+	if (KEYBOARD_INPUT->CheckPressEvent('m'))
+	{
+		inMenu = !inMenu;
+
+		if (inMenu)
+		{
+			position = menuDefaultPos;
+			currentAngles = menuDefaultAngle;
+		}
+		else
+		{
+			position = gameDefaultPos;
+			currentAngles = gameDefaultAngle;
+		}
+	}
+}
+
 bool selected = true;
 void processInputs()
 {
 	//std::cout << p1.connected() << std::endl;
-
 	if (selected == true)
 	{
 		characterInput(&animation[0], p1);
@@ -836,6 +961,21 @@ void processInputs()
 	if (KEYBOARD_INPUT->CheckPressEvent('c'))
 	{
 		cameraLock = !cameraLock;
+	}
+	if (KEYBOARD_INPUT->CheckPressEvent('m'))
+	{
+		inMenu = !inMenu;
+
+		if (inMenu)
+		{
+			position = menuDefaultPos;
+			currentAngles = menuDefaultAngle;
+		}
+		else
+		{
+			position = gameDefaultPos;
+			currentAngles = gameDefaultAngle;
+		}
 	}
 
 	//if (KEYBOARD_INPUT->IsKeyDown('1'))
@@ -915,7 +1055,8 @@ void TimerCallbackFunction(int value)
 	/* this call gives it a proper frame delay to hit our target FPS */
 
 	// Process all inputs /////////////////////////////////////////////////////
-	processInputs();
+	if (inMenu) processMenuInputs();
+	else processInputs();
 	// Flush event list
 	KEYBOARD_INPUT->WipeEventList();
 
