@@ -472,14 +472,6 @@ void test()
 
 	object[2].draw(iModelViewProjectionLoc, mvp);
 
-	//rotationMatrix = glm::rotate(directionT, animation[0].getRot());
-
-	rotationMatrix = glm::mat4{
-		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
 
 	ModelMatrix = glm::mat4{
 		scale, 0.0f, 0.0f, 0.0f,
@@ -487,19 +479,44 @@ void test()
 		0.0f, 0.0f, scale, 0.0f,
 		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
 
+	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
+
+	rotationMatrix = glm::mat4{
+		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
+	//rotationMatrix = glm::rotate(directionT, animation[0].getRot());
+	glm::mat4 directionModel = directionT * rotationMatrix;
+	mvp = ProjectionMatrix * ViewMatrix * directionModel;
+
+	if (animation[0].charge > 0)
+	{
+		glm::vec3 playerPos(animation[0].getPos());
+		glm::vec3 dir(-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y));
+		crosshairPos[0] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
+		line->setPos(lerp(playerPos, crosshairPos[0], animation[0].charge));
+
+		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line->getPos()); //* directionModel;
+		line->draw(iModelViewProjectionLoc, mvp);
+	}
+
+
+	ModelMatrix = ModelMatrix * rotationMatrix;
+
+
 	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	if (animation[0].lives > 0)
 	{
 		if (!animation[0].isInvincible())
 			animation[0].draw(iModelViewProjectionLoc, mvp, 0, 2490);
-		//animation[0].draw(pass, mvp, 0, 2490);
 
 		ModelMatrix = glm::mat4{
 			scale, 0.0f, 0.0f, 0.0f,
 			0.0f, scale, 0.0f, 0.0f,
 			0.0f, 0.0f, scale, 0.0f,
 			animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-		printf("%f", animation[0].getPos().x);
 		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 		animation[0].draw(iModelViewProjectionLoc, mvp, 2490, 882);
@@ -511,63 +528,6 @@ void test()
 		0.0f, scale, 0.0f, 0.0f,
 		0.0f, 0.0f, scale, 0.0f,
 		animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
-
-	rotationMatrix = glm::mat4{
-		cos(animation[1].getRot().y), 0.0f, sin(animation[1].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[1].getRot().y), 0.0f, cos(animation[1].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-	ModelMatrix = ModelMatrix * rotationMatrix;
-
-	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-	if (animation[1].lives > 0)
-	{
-		if (!animation[1].isInvincible())
-			animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
-
-		ModelMatrix = glm::mat4{
-			scale, 0.0f, 0.0f, 0.0f,
-			0.0f, scale, 0.0f, 0.0f,
-			0.0f, 0.0f, scale, 0.0f,
-			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
-		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 882);
-	}
-	
-	rotationMatrix = glm::mat4{
-		cos(animation[0].getRot().y), 0.0f, sin(animation[0].getRot().y), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-
-	ModelMatrix = glm::mat4{
-		scale, 0.0f, 0.0f, 0.0f,
-		0.0f, scale, 0.0f, 0.0f,
-		0.0f, 0.0f, scale, 0.0f,
-		animation[0].getPos().x,  animation[0].getPos().y,  animation[0].getPos().z,  1.0f };
-
-	glm::mat4 directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
-
-	glm::mat4 directionModel = directionT * rotationMatrix;
-	mvp = ProjectionMatrix * ViewMatrix * directionModel;
-	if (animation[0].charge > 0)
-	{
-		glm::vec3 playerPos(animation[0].getPos());
-		glm::vec3 dir(-sin(animation[0].getRot().y), 0.0f, cos(animation[0].getRot().y));
-		crosshairPos[0] = glm::vec3(playerPos.x, playerPos.y - 4.0f, playerPos.z) + (dir * 43.0f);
-		line->setPos(lerp(playerPos, crosshairPos[0], animation[0].charge));
-
-		mvp = ProjectionMatrix * ViewMatrix * glm::translate(identity, line->getPos()); //* directionModel;
-	}
-
-	ModelMatrix = glm::mat4{
-	  scale, 0.0f, 0.0f, 0.0f,
-	  0.0f, scale, 0.0f, 0.0f,
-	  0.0f, 0.0f, scale, 0.0f,
-	  animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
 
 	directionT = glm::translate(ModelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
 	//directionT = ModelMatrix;
@@ -592,7 +552,31 @@ void test()
 		line2.draw(iModelViewProjectionLoc, mvp);
 	}
 
+	ModelMatrix = ModelMatrix * rotationMatrix;
 
+	mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	if (animation[1].lives > 0)
+	{
+		if (!animation[1].isInvincible())
+			animation[1].draw(iModelViewProjectionLoc, mvp, 0, 2490);
+
+		ModelMatrix = glm::mat4{
+			scale, 0.0f, 0.0f, 0.0f,
+			0.0f, scale, 0.0f, 0.0f,
+			0.0f, 0.0f, scale, 0.0f,
+			animation[1].getPos().x,  animation[1].getPos().y,  animation[1].getPos().z,  1.0f };
+		mvp = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		animation[1].draw(iModelViewProjectionLoc, mvp, 2490, 882);
+	}
+
+
+
+
+	//glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
+	//glBindVertexArray(uiVAO2[1]);
+	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	//glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
 
 	// Draw the bomb
 	for (int i = 0; i < 2; i++)
@@ -668,30 +652,8 @@ void test()
 		}
 	}
 
-
-
-	//weightMain.useProgram();
-	//
-	//int imvp = glGetUniformLocation(weightMain.getProgramID(), "mvp");
-	//int sampler2 = glGetUniformLocation(weightMain.getProgramID(), "gSampler");
-	//int boneMatrix = glGetUniformLocation(weightMain.getProgramID(), "BoneMatrixArray");
-	//int boneCount = glGetUniformLocation(weightMain.getProgramID(), "boneCount");
-	//int* pass[3];
-	//pass[0] = &imvp;
-	//pass[2] = &boneMatrix;
-	//pass[1] = &boneCount;
-
-
-
-
-
-
-	//glBindTexture(GL_TEXTURE_2D, texture_handle[2]);
-	//glBindVertexArray(uiVAO2[1]);
-	//glUniformMatrix4fv(iModelViewProjectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-	//glDrawArrays(GL_TRIANGLES, 0, object[sphereSpot + 1].getVertex().size());
-
 }
+
 
 
 /* function void KeyboardCallbackFunction(unsigned char, int,int)
