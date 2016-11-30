@@ -1,3 +1,4 @@
+#pragma once
 #include "GameObject.h"
 #include <IL\ilut.h>
 #include "glm\gtc\type_ptr.hpp"
@@ -171,10 +172,22 @@ void GameObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int p
 	glDrawArrays(GL_TRIANGLES, point1, point2);
 }
 
+void GameObject::draw(GLint *iModelViewProjectionLoc[], glm::mat4 const& mvp, int count, glm::mat4 matrix[], int point1, int point2)
+{
+	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(uiVAO[0]);
+	glUniformMatrix4fv(*iModelViewProjectionLoc[0], 1, GL_FALSE, glm::value_ptr(mvp));
+	glUniform1f(*iModelViewProjectionLoc[1], count);
+	glUniformMatrix4fv(*iModelViewProjectionLoc[2], 28, GL_FALSE, glm::value_ptr(matrix[0]));
+	glDrawArrays(GL_TRIANGLES, point1, point2);
+}
+
+
 void GameObject::bindObjectData(GLuint DrawType)
 {
 	glGenVertexArrays(2, uiVAO);
-	glGenBuffers(6, uiVBO);
+	glGenBuffers(5, uiVBO);
 
 	glBindVertexArray(uiVAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[0]);
@@ -195,18 +208,19 @@ void GameObject::bindObjectData(GLuint DrawType)
 
 	if (DEBUG_BOUNDING)
 	{
+		glGenBuffers(3, uiVBOD);
 		glBindVertexArray(uiVAO[1]);
-		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBOD[0]);
 		glBufferData(GL_ARRAY_BUFFER, boundingBox.getVertices().size() * sizeof(glm::vec3), boundingBox.getVertices().data(), DrawType);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBOD[1]);
 		glBufferData(GL_ARRAY_BUFFER, boundingBox.getUVs().size() * sizeof(glm::vec2), boundingBox.getUVs().data(), DrawType);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, uiVBO[5]);
+		glBindBuffer(GL_ARRAY_BUFFER, uiVBOD[2]);
 		glBufferData(GL_ARRAY_BUFFER, boundingBox.getNormals().size() * sizeof(glm::vec3), boundingBox.getNormals().data(), DrawType);
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -217,7 +231,7 @@ void GameObject::bindTexture(char* filePath)
 {
 	glGenTextures(1, &texHandle[0]);
 	glGenSamplers(1, &texSampler[0]);
-	
+
 	texHandle[0] = ilutGLLoadImage(filePath);
 	glBindTexture(GL_TEXTURE_2D, texHandle[0]);
 
@@ -256,10 +270,22 @@ Joints::Joints()
 	m_pCurrentFrame(0),
 	jointAnimation(nullptr)
 {
+	m_pRotX = 0;
+	m_pRotY = 0;
+	m_pRotZ = 0;
+}
 
+Joints* Joints::getParent()
+{
+	return m_pParent;
 }
 
 Joints::~Joints() {}
+
+void Joints::setWorldMatrix(glm::mat4 temp)
+{
+	m_pLocalToWorldMatrix = temp;
+}
 
 void Joints::setPosition(glm::vec3 newPosition)
 {
@@ -289,6 +315,11 @@ void Joints::setScale(float newScale)
 glm::mat4 Joints::getLocalToWorldMatrix()
 {
 	return m_pLocalToWorldMatrix;
+}
+
+glm::mat4 Joints::getLocalTransform()
+{
+	return m_pLocalTransformMatrix;
 }
 
 void Joints::update(float dt)
@@ -337,7 +368,7 @@ void Joints::update(float dt)
 	// If a game object has a transform, then we must apply the parent's transform
 	m_pLocalTransformMatrix = tran * m_pLocalRotation * scal;
 
-	if (m_pParent)
+	if (m_pParent && m_pParent != NULL)
 		m_pLocalToWorldMatrix = m_pParent->getLocalToWorldMatrix() * m_pLocalTransformMatrix;
 	else
 		m_pLocalToWorldMatrix = m_pLocalTransformMatrix;
@@ -399,7 +430,7 @@ void Joints::removeChild(Joints* rip)
 	{
 		if (m_pChildren[i] == rip) // compare memory locations (pointers)
 		{
-		//	std::cout << "Removing child: " + rip->name << " from object: " << this->name;
+			//	std::cout << "Removing child: " + rip->name << " from object: " << this->name;
 			m_pChildren.erase(m_pChildren.begin() + i);
 		}
 	}
@@ -517,14 +548,16 @@ PlayerObject::PlayerObject(char const* basePosePath, char * texData, int _side, 
 	maxiFrames = 3.0f;
 	currentiFrames = maxiFrames;
 
+	//GameObject::obj.out_vertices = weights.vertexs;
+
 	loader.loadHTR("obj\\bombot.htr");
 	loader.createGameObjects();
-	
+	jointNum = 28;
 	skeleton.addChild(loader.getRootGameObject());
 }
 
 PlayerObject::PlayerObject()
-	: AnimatedObject(),  weights("obj\\test.fbx")
+	: AnimatedObject(), weights("obj\\test.fbx")
 {
 	score = 0;
 	charge = 0;
@@ -535,14 +568,32 @@ PlayerObject::PlayerObject()
 
 	loader.loadHTR("obj\\bombot.htr");
 	loader.createGameObjects();
-	
+	jointNum = 28;
 	skeleton.addChild(loader.getRootGameObject());
+
+
 }
 
 void PlayerObject::update(float dt)
 {
 	AnimatedObject::update(dt);
 
+	//glm::mat4 trans = glm::translate(GameObject::getPos());
+	//glm::mat4 X = glm::rotate(GameObject::getRot().x, glm::vec3(1.0f, 0.0f, 0.0f));
+	//glm::mat4 Y = glm::rotate(GameObject::getRot().y, glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::mat4 Z = glm::rotate(GameObject::getRot().z, glm::vec3(0.0f, 0.0f, 1.0f));
+	//glm::mat4 rot = Z * Y * Y;
+	//glm::mat4 scale = glm::scale(GameObject::scale);
+	//
+	//glm::mat4 finals = trans * rot * scale;
+
+
+	//loader.setWorldOrigin(finals);
+
+	//skeleton.setPosition(GameObject::getPos());
+	//skeleton.setParent(NULL);
+	//skeleton.m_pChildren[0]->m_pParent = &skeleton;
+	//skeleton.update(dt);//using frames not dt.
 	if (currentiFrames < maxiFrames)
 	{
 		currentiFrames += dt;
@@ -550,6 +601,20 @@ void PlayerObject::update(float dt)
 		if (currentiFrames > maxiFrames)
 			currentiFrames = maxiFrames;
 	}
+
+
+	//for (int i = 0; i < 28; i++)
+	//{
+	//	glm::mat4 b = glm::inverse(loader.getJointList()[i].getLocalTransform());
+	//	glm::mat4 w;
+	//
+	//	if (i == 0)
+	//		w = glm::mat4();
+	//	else
+	//		w = loader.getJointList()[i].getParent()->getLocalToWorldMatrix();
+	//	boneMatrix[i] = w * b;
+	//}
+	//int test = 5;
 }
 
 void PlayerObject::setSide(int _side)
@@ -560,6 +625,7 @@ void PlayerObject::setSide(int _side)
 void PlayerObject::bindObjectData(GLuint DrawType)
 {
 	GameObject::bindObjectData(DrawType);
+	bindskeleton();
 	bomb.bindObjectData();
 }
 
@@ -577,7 +643,7 @@ bool PlayerObject::isInvincible() const
 void PlayerObject::takeDamage(int damage)
 {
 	currentiFrames = 0.0f;
-	lives-= damage;
+	lives -= damage;
 }
 
 void PlayerObject::reset()
@@ -585,6 +651,32 @@ void PlayerObject::reset()
 	lives = 2;
 	setPos(glm::vec3(0.0f, 10.0f, 0.0f));
 	useGravity(true);
+}
+
+void PlayerObject::bindskeleton(GLuint DrawType)
+{
+	glBindVertexArray(uiVAO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[3]);
+
+	glBufferData(GL_ARRAY_BUFFER, weights.getJoints().size() * sizeof(glm::vec4), weights.getJoints().data(), DrawType);
+	glEnableVertexAttribArray(6);
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO[4]);
+	glBufferData(GL_ARRAY_BUFFER, weights.getWeights().size() * sizeof(glm::vec4), weights.getWeights().data(), DrawType);
+	glEnableVertexAttribArray(7);
+	glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 0, 0);
+}
+
+void PlayerObject::draw(GLint* iModelViewProjectionLoc[], glm::mat4 const& mvp, int point1, int point2)
+{
+	//animation[0].draw(iModelViewProjectionLoc, mvp, animation[0].boneMatrix, animation[0].jointNum, 0, 2490);
+	GameObject::draw(iModelViewProjectionLoc, mvp, jointNum, boneMatrix, point1, point2);
+}
+
+void PlayerObject::draw(GLint iModelViewProjectionLoc, glm::mat4 const& mvp, int point1, int point2)
+{
+	GameObject::draw(iModelViewProjectionLoc, mvp, point1, point2);
 }
 
 ////////////////////////////////////////////////////////////  BOMB OBJECT  ////
@@ -675,7 +767,7 @@ Collision Bomb::checkCollision(GameObject * other)
 		else
 		{
 			col = GameObject::checkCollision(other);
-		}	
+		}
 	}
 
 	return col;

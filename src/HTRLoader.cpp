@@ -313,6 +313,7 @@ void HTRLoader::createGameObjects()
 
 		parent->addChild(child);
 	}
+	printf("sdfds");
 }
 
 Joints* HTRLoader::getRootGameObject()
@@ -395,4 +396,14 @@ Joints* HTRLoader::getGameObjectByName(std::string jointName)
 	}
 
 	return nullptr;
+}
+
+std::vector<Joints> HTRLoader::getJointList()
+{
+	return jointGameObjects;
+}
+
+void HTRLoader::setWorldOrigin(glm::mat4 temp)
+{
+	jointGameObjects[0].setWorldMatrix(temp);
 }

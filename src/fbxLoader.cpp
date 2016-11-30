@@ -4,7 +4,8 @@ fbxLoader::fbxLoader(FbxString _name)
 	std::vector<float> temp;
 	for (int i = 0; i < 613; i++)
 	{
-		weights.push_back(temp);
+		weights.push_back(glm::vec4(0));
+		joints.push_back(glm::vec4(-1));
 	}
 	FbxManager* lSdkManager = NULL;
 	FbxScene* lScene = NULL;
@@ -61,6 +62,29 @@ void fbxLoader::recursive(FbxNode *pNode)
 		FbxMesh* lMesh = (FbxMesh*)pNode->GetNodeAttribute();
 		savePolygons(lMesh);
 		skinWeights(lMesh);
+		for (int i = 0; i <= weights.size() - 1; i++)
+		{
+			float total = weights[i].x + weights[i].y + weights[i].z + weights[i].w;
+			if (total != 1)
+			{
+				weights[i].x = weights[i].x / total;
+				weights[i].x = weights[i].x * 1.0f;
+
+				weights[i].y = weights[i].y / total;
+				weights[i].y = weights[i].y * 1.0f;
+
+				weights[i].z = weights[i].z / total;
+				weights[i].z = weights[i].z * 1.0f;
+
+				weights[i].w = weights[i].w / total;
+				weights[i].w = weights[i].w * 1.0f;
+			}
+		}
+		for (int i = 0; i <= controlPoint.size()-1; i++)
+		{
+			jointsFixed.push_back(joints[controlPoint[i]]);
+			weightFixed.push_back(weights[controlPoint[i]]);
+		}
 		break;
 	}
 
@@ -80,10 +104,17 @@ void fbxLoader::savePolygons(FbxMesh* pMesh)
 	for (i = 0; i < lPolygonCount; i++)
 	{
 		int lPolygonSize = pMesh->GetPolygonSize(i);
-
+	
 		for (j = 0; j < lPolygonSize; j++)
 		{
 			int lControlPointIndex = pMesh->GetPolygonVertex(i, j);
+
+			vertexs.push_back(glm::vec3(
+				(float)lControlPoints[lControlPointIndex][0],
+				(float)lControlPoints[lControlPointIndex][1],
+				(float)lControlPoints[lControlPointIndex][2]
+			));
+
 			controlPoint.push_back(lControlPointIndex);
 		}
 		vertexId++;
@@ -126,8 +157,46 @@ void fbxLoader::skinWeights(FbxGeometry* pGeometry)
 			for (k = 0; k < lIndexCount; k++)
 			{
 				printf("spot: %d \n", lIndices[k]);
-				weights[lIndices[k]].push_back((float)lWeights[k]);
+				//weights[lIndices[k]].push_back((float)lWeights[k]);
+				for (int l = 0; l < 4; l++)
+				{
+					switch (l)
+					{
+					case 0:
+						if (joints[lIndices[k]].x == -1)
+						{
+							joints[lIndices[k]].x = j;
+							weights[lIndices[k]].x = (float)lWeights[k];
+							l = 5;
+						}
+						break;
+					case 1:
+						if (joints[lIndices[k]].y == -1)
+						{
+							joints[lIndices[k]].y = j;
+							weights[lIndices[k]].y = (float)lWeights[k];
+							l = 5;
+						}
+						break;
+					case 2:
+						if (joints[lIndices[k]].z == -1)
+						{
+							joints[lIndices[k]].z = j;
+							weights[lIndices[k]].z = (float)lWeights[k];
+							l = 5;
+						}
+						break;
+					case 3:
+						if (joints[lIndices[k]].w == -1)
+						{
+							joints[lIndices[k]].w = j;
+							weights[lIndices[k]].w = (float)lWeights[k];
+							l = 5;
+						}
+						break;
 
+					}
+				}
 			}
 
 
@@ -207,7 +276,7 @@ bool fbxLoader::LoadScene(FbxManager* pManager, FbxDocument* pScene, const char*
 		return false;
 	}
 
-	
+
 	if (lImporter->IsFBX())
 	{
 		// Set the import states. By default, the import states are always set to 
@@ -228,7 +297,10 @@ bool fbxLoader::LoadScene(FbxManager* pManager, FbxDocument* pScene, const char*
 	// Destroy the importer.
 	lImporter->Destroy();
 
+	
+
 	return lStatus;
 }
-std::vector<std::vector<float>> fbxLoader::getWeights() { return weights; };
-std::vector<int> fbxLoader::getOrder() { return controlPoint; };
+std::vector<glm::vec4> fbxLoader::getWeights() { return weightFixed; };
+std::vector<glm::vec4> fbxLoader::getJoints() { return jointsFixed; };
+
