@@ -230,7 +230,7 @@ void initScene()
 	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
 	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
-	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 5.0));
@@ -238,7 +238,7 @@ void initScene()
 	animation[0].useGravity(true);
 
 
-	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
+	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
 	animation[1].setCurrentAnim(1);
 	animation[1].setPos(glm::vec3(0.0, 10.0, -5.0));
