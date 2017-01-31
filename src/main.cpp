@@ -223,6 +223,7 @@ void initScene()
 	animation[0].setCurrentAnim(1);
 	animation[0].setPos(glm::vec3(0.0, 10.0, 35.0));
 	animation[0].setMass(1.5f);
+	animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 	animation[0].useGravity(true);
 	animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 
@@ -1021,6 +1022,7 @@ void TimerCallbackFunction(int value)
 		animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 		animation[0].reset(glm::vec3(0.0, 10.0, 35.0));
 		animation[1].reset(glm::vec3(0.0, 10.0, -35.0));
+		animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 	}
 
 	// if no mouse movement zero the mouse posistions.
@@ -1140,7 +1142,7 @@ int main(int argc, char **argv)
 
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutCreateWindow("window title");
+	glutCreateWindow("Dodge Bomb");
 
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
