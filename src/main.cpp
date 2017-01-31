@@ -27,6 +27,8 @@
 
 glm::mat4 rotationMatrix;
 
+bool mouseMovement = false;
+
 controller p1(0);
 controller p2(1);
 
@@ -128,10 +130,13 @@ Collision aabb;
 ShaderLoader shVertex, shFragment, weightVert, weightFrag;
 ShaderProgram spMain, weightMain;
 
+vector<GLuint> texture_handle;
+vector<GLuint> texture_sampler;
+
+vector<GLuint> texture_handler_score;
+vector<GLuint> texture_sampler_score;
 
 glm::vec3 up;
-
-
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
 
@@ -142,19 +147,21 @@ glm::mat4 getProjectionMatrix() {
 	return ProjectionMatrix;
 }
 
-vector<GLuint> texture_handle;
-vector<GLuint> texture_sampler;
 
-vector<GLuint> texture_handler_score;
-vector<GLuint> texture_sampler_score;
 
 bool cameraLock = true;
 void makeMatricies()
 {
 	if (cameraLock == false)
 	{
-		currentAngles.x += mouseSpeed * float(lastMousepositionX - mousepositionX);
-		currentAngles.y += mouseSpeed * float(lastMousepositionY - mousepositionY);
+		//printf("Last mouse PositionX: %f mouse PositionX: %f \n", lastMousepositionX, mousepositionX);
+		//printf("Last mouse PositionY: %f mouse PositionY: %f \n", lastMousepositionY, mousepositionY);
+		float tempX = float(lastMousepositionX - mousepositionX);
+		float tempY = float(lastMousepositionY - mousepositionY);
+		//printf("tempX: %f \n", tempX);
+		//printf("tempY: %f \n", tempX);
+		currentAngles.x += mouseSpeed * tempX;
+		currentAngles.y += mouseSpeed * tempY;
 	}
 
 	direction = glm::vec3(
@@ -210,24 +217,6 @@ void initScene()
 	inMenu = false;
 
 
-	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\paperDiff.jpg", glm::vec3(1.0f)));	// "Ready?" note
-	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\blueNOREADY.jpg", glm::vec3(1.0f)));	// Blue note
-	//UI.push_back(MultiTexObject("obj\\paper.obj", "img\\menu\\redNOREADY.jpg", glm::vec3(1.0f)));	// Red note
-
-	//UI[1].addTex("img\\menu\\blueREADY.jpg");
-	//UI[1].addTex("img\\menu\\tacnoteBLUEDif.jpg");
-	//UI[1].addTex("img\\menu\\tacnoteBLUExDif.jpg");
-
-	//UI[2].addTex("img\\menu\\blueREADY.jpg");
-	//UI[2].addTex("img\\menu\\tacnoteBLUEDif.jpg");
-	//UI[2].addTex("img\\menu\\tacnoteBLUExDif.jpg");
-	//
-	//UI[0].bindObjectData();
-
-	//dimensions.push_back(glm::vec3(1.1f, 1.1f, 0.90f));// Chest
-	//dimensions.push_back(glm::vec3(2.1f*scale, 5.0f*scale, 2.2f*scale));// Robot
-	//dimensions.push_back(glm::vec3(41.5f, 0.05f, 41.5f));// floor
-	//dimensions.push_back(glm::vec3(0.44f, 0.47f, 0.44f));//sphere
 
 	animation[0] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse).png", 0, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[0].addAnim("obj\\robot\\robot_walk_anim.txt");
@@ -235,7 +224,7 @@ void initScene()
 	animation[0].setPos(glm::vec3(0.0, 10.0, 35.0));
 	animation[0].setMass(1.5f);
 	animation[0].useGravity(true);
-
+	animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 
 	animation[1] = PlayerObject("obj\\robot\\bombot2_test.obj", "img\\bombot(diffuse)2.png", 1, glm::vec3(2.1f, 5.0f, 2.2f));
 	animation[1].addAnim("obj\\robot\\robot_walk_anim.txt");
@@ -422,7 +411,6 @@ void test()
 {
 
 	spMain.useProgram();
-
 	glm::mat4  ModelMatrix;
 
 
@@ -823,7 +811,7 @@ void characterInput(PlayerObject *player, controller conPlayer)
 	}
 
 
-	printf("x: %f \n y: %f \n", player->getPos().x, player->getPos().z);
+	//printf("x: %f \n y: %f \n", player->getPos().x, player->getPos().z);
 }
 
 void processMenuInputs()
@@ -902,10 +890,7 @@ void processInputs()
 	{
 		glutLeaveMainLoop();
 	}
-	if (KEYBOARD_INPUT->CheckPressEvent('c'))
-	{
-		cameraLock = !cameraLock;
-	}
+
 	if (KEYBOARD_INPUT->CheckPressEvent('m'))
 	{
 		inMenu = !inMenu;
@@ -1032,11 +1017,20 @@ void TimerCallbackFunction(int value)
 		animation[0].currentiFrames = animation[0].maxiFrames;
 		animation[1].currentiFrames = animation[0].maxiFrames;
 		animation[0].bomb.reset();
-			animation[1].bomb.reset();
+		animation[1].bomb.reset();
+		animation[0].setRot(glm::vec3(0.0f, 3.1415f, 0.0f));
 		animation[0].reset(glm::vec3(0.0, 10.0, 35.0));
 		animation[1].reset(glm::vec3(0.0, 10.0, -35.0));
 	}
 
+	// if no mouse movement zero the mouse posistions.
+	if (mouseMovement == false)
+	{
+		lastMousepositionX = mousepositionX;
+		lastMousepositionY = mousepositionY;
+	}
+
+	mouseMovement = false;
 	glutTimerFunc(FRAME_DELAY, TimerCallbackFunction, 0); // after x Ticks call again.
 }
 
@@ -1063,22 +1057,31 @@ void WindowReshapeCallbackFunction(int w, int h)
 void MouseClickCallbackFunction(int button, int state, int x, int y)
 {
 	// Handle mouse clicks
+	mouseMovement = true;
+	cameraLock = true;
+
 	if (state == GLUT_DOWN)
 	{
-		//std::cout << button << std::endl;
-		//std::cout << "Mouse X:" << x << " Mouse y: " << y << std::endl;
-		//if (button == 0)
-		//	std::cout << "you're a butt" << std::endl;
-
-		//if (button == 1)
-		//	std::cout << "da middle" << std::endl;
-
-		//if (button == 2)
-		//	std::cout << "da left" << std::endl;
+		if (button == 0)
+		{
+			cameraLock = false;
+		}
+		else
+		{
+			cameraLock = true;
+		}
 	}
+	lastMousepositionX = mousepositionX;
+	lastMousepositionY = mousepositionY;
+	mousepositionX = x;
+	mousepositionY = y;
 
-
-
+	printf("Last mouse PositionX: %f mouse PositionX: %f \n", lastMousepositionX, mousepositionX);
+	printf("Last mouse PositionY: %f mouse PositionY: %f \n", lastMousepositionY, mousepositionY);
+	float tempX = float(lastMousepositionX - mousepositionX);
+	float tempY = float(lastMousepositionY - mousepositionY);
+	printf("tempX: %f \n", tempX);
+	printf("tempY: %f \n", tempX);
 }
 
 
@@ -1088,7 +1091,18 @@ void MouseClickCallbackFunction(int button, int state, int x, int y)
 */
 void MouseMotionCallbackFunction(int x, int y)
 {
+	mouseMovement = true;
+	lastMousepositionX = mousepositionX;
+	lastMousepositionY = mousepositionY;
+	mousepositionX = x;
+	mousepositionY = y;
 
+	printf("Last mouse PositionX: %f mouse PositionX: %f \n", lastMousepositionX, mousepositionX);
+	printf("Last mouse PositionY: %f mouse PositionY: %f \n", lastMousepositionY, mousepositionY);
+	float tempX = float(lastMousepositionX - mousepositionX);
+	float tempY = float(lastMousepositionY - mousepositionY);
+	printf("tempX: %f \n", tempX);
+	printf("tempY: %f \n", tempX);
 }
 
 /* function MousePassiveMotionCallbackFunction()
@@ -1097,10 +1111,18 @@ void MouseMotionCallbackFunction(int x, int y)
 */
 void MousePassiveMotionCallbackFunction(int x, int y)
 {
+	mouseMovement = true;
 	lastMousepositionX = mousepositionX;
 	lastMousepositionY = mousepositionY;
 	mousepositionX = x;
 	mousepositionY = y;
+
+	printf("Last mouse PositionX: %f mouse PositionX: %f \n", lastMousepositionX, mousepositionX);
+	printf("Last mouse PositionY: %f mouse PositionY: %f \n", lastMousepositionY, mousepositionY);
+	float tempX = float(lastMousepositionX - mousepositionX);
+	float tempY = float(lastMousepositionY - mousepositionY);
+	printf("tempX: %f \n", tempX);
+	printf("tempY: %f \n", tempX);
 }
 
 /* function main()
