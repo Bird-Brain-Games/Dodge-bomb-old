@@ -11,28 +11,36 @@ UINT ShaderLoader::getShaderID()
 	return shaderID;
 }
 
+bool ShaderLoader::getLoaded()
+{
+	return loaded;
+}
+
 bool ShaderLoader::loadShader(std::string name, int shaderType)
 {
-	std::ifstream file(name);
-	std::string temp;
+	FILE* fp = fopen(name.c_str(), "rt"); // fp: filepath
+
+
+	char line[255];
 	std::vector<std::string> lines;
-	while (std::getline(file, temp))
+
+
+	while (fgets(line, 255, fp))
 	{
-		lines.push_back(temp);
+		lines.push_back(line);
 	}
-	file.close();
+	fclose(fp);
 	const char** size = new const char*[(int)lines.size()];
 	for (int count = 0; count < (int)lines.size(); count++)
 	{
 		size[count] = lines[count].c_str();
 	}
-	glShaderSource(shaderType, lines.size(), size, NULL);
-	glReleaseShaderCompiler();
+	shaderID = glCreateShader(shaderType);
+
+	glShaderSource(shaderID, lines.size(), size, NULL);
+	glCompileShader(shaderID);
 
 	delete[] size;
-
-	shaderID = shaderType;
-	loaded = true;
 
 	int iCompilationStatus;
 	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &iCompilationStatus);
@@ -44,31 +52,80 @@ bool ShaderLoader::loadShader(std::string name, int shaderType)
 	return true;
 }
 
-//FILE* fp = fopen(sFile.c_str(), "rt");
-//if (!fp)return false;
-//
-//// Get all lines from a file
-//
-//vector<string> sLines;
-//char sLine[255];
-//while (fgets(sLine, 255, fp))sLines.push_back(sLine);
-//fclose(fp);
-//
-//const char** sProgram = new const char*[ESZ(sLines)];
-//FOR(i, ESZ(sLines))sProgram[i] = sLines[i].c_str();
-//
-//uiShader = glCreateShader(a_iType);
-//
-//glShaderSource(uiShader, ESZ(sLines), sProgram, NULL);
-//glCompileShader(uiShader);
-//
-//delete[] sProgram;
-//
-//int iCompilationStatus;
-//glGetShaderiv(uiShader, GL_COMPILE_STATUS, &iCompilationStatus);
-//
-//if (iCompilationStatus == GL_FALSE)return false;
-//iType = a_iType;
-//bLoaded = true;
-//
-//return 1;
+void ShaderLoader::deleteShader()
+{
+	if (getLoaded() == false) return;
+	loaded = false;
+	glDeleteShader(shaderID);
+}
+
+void ShaderLoader::OutputProgramLog() const
+{
+	GLint maxLength = 0;
+	glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
+
+	// The maxLength includes the NULL character
+	std::vector<GLchar> errorLog(maxLength);
+	glGetShaderInfoLog(shaderID, maxLength, &maxLength, &errorLog[0]);
+}
+
+ShaderProgram::ShaderProgram()
+{
+	linked = false;
+}
+
+
+void ShaderProgram::createProgram()
+{
+	programID = glCreateProgram();//creates the program
+}
+
+void ShaderProgram::deleteProgram()
+{
+	if (linked == false) return;
+
+	linked = false;
+	glDeleteProgram(programID);
+}
+
+bool ShaderProgram::addShader(ShaderLoader *shader)
+{
+	if (shader->getLoaded() == false) return false;
+
+	glAttachShader(programID, shader->getShaderID());//adds the shader we loaded to the program
+
+	return true;
+}
+bool ShaderProgram::linkProgram()
+{
+	glLinkProgram(programID);
+	int linkStatus;
+	glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
+	linked = linkStatus == GL_TRUE;
+
+	// TEMP
+	return linked;
+}
+UINT ShaderProgram::getProgramID()
+{
+	return programID;
+}
+
+void ShaderProgram::useProgram()
+{
+	if (linked)
+	{
+		glUseProgram(programID);
+	}
+}
+
+void ShaderProgram::OutputProgramLog() const
+{
+	std::vector<char> infoLog;
+	infoLog.resize(512);
+
+	GLint infoLen;
+	glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLen);
+	glGetProgramInfoLog(programID, sizeof(char) * 512, &infoLen, &infoLog[0]); std::cout << std::string(infoLog.begin(), infoLog.end()) << "\n";
+}
+
